@@ -1,3 +1,10 @@
+// ==UserScript==
+// @name         No FingerprintJs
+// @version      0.2
+// @description  Block browser fingerprinting attempts.
+// @author       farimarwat
+// @namespace    https://github.com/farimarwat
+// ==/UserScript==
 let script = document.createElement("script");
 script.textContent = "(" + (function() {
 	"use strict";
@@ -69,76 +76,36 @@ script.textContent = "(" + (function() {
         }
     })();
     
-
-
-	(function () { // navigator
-		let a;
-		let fakeNavigator = {};
-	//	fakeNavigator.appCodeName						=
-	//	fakeNavigator.appName							=
-	//	fakeNavigator.appVersion						=
-	//	fakeNavigator.platform							=
-		fakeNavigator.product							=
-		fakeNavigator.productSub						=
-	//	fakeNavigator.userAgent							=
-		fakeNavigator.vendor							=
-		fakeNavigator.vendorSub							=
-		a = "";
-		fakeNavigator.deviceMemory						=
-		fakeNavigator.hardwareConcurrency				=
-		fakeNavigator.maxTouchPoints					=
-		a = 0;
-		fakeNavigator.bluetooth							=
-		fakeNavigator.clipboard							=
-		fakeNavigator.connection						=
-	//	fakeNavigator.cookieEnabled						=
-		fakeNavigator.credentials						=
-		fakeNavigator.doNotTrack						=
-		fakeNavigator.geolocation						=
-		fakeNavigator.keyboard							=
-		fakeNavigator.language							=
-		fakeNavigator.languages							=
-		fakeNavigator.locks								=
-		fakeNavigator.mediaCapabilities					=
-		fakeNavigator.mediaDevices						=
-		fakeNavigator.mediaSession						=
-	//	fakeNavigator.mimeTypes							=
-		fakeNavigator.onLine							=
-		fakeNavigator.permissions						=
-		fakeNavigator.presentation						=
-		fakeNavigator.scheduling						=
-		fakeNavigator.serviceWorker						=
-	//	fakeNavigator.storage							=
-		fakeNavigator.usb								=
-		fakeNavigator.userActivation					=
-		fakeNavigator.userAgentData						=
-		fakeNavigator.wakeLock							=
-		fakeNavigator.webkitPersistentStorage			=
-		fakeNavigator.webkitTemporaryStorage			=
-		fakeNavigator.xr								=
-		a = {};
-		fakeNavigator.hardwareConcurrency				= 4;
-		fakeNavigator.deviceMemory						= "undefined";
-	//	fakeNavigator.platform 							= "Win32";
-		fakeNavigator.plugins							= [];
-		setValue(fakeNavigator.plugins, "item",			function item() { return null; },		false);
-		setValue(fakeNavigator.plugins, "namedItem",	function namedItem() { return null; },	false);
-		setValue(fakeNavigator.plugins, "refresh",		function refresh() { return null; },	false);
-		for (let i in window.navigator) {
-			if (fakeNavigator[i] !== undefined) {
-				try {
-					Object.defineProperty(window.navigator, i, {
-						get: function () {
-							if (fakeNavigator[i] === "undefined") {
-								return undefined;
-							}
-							return fakeNavigator[i];
-						}
-					});
-				} catch (e) {}
-			}
-		}
-	})();
+    //Navigator
+	(function () { 
+        // Randomize navigator object behavior
+        if (Math.random() < 0.5) { // 50% chance of applying randomization
+            const originalNavigator = { ...window.navigator }; // Copy original navigator object
+    
+            // Define properties with randomized values
+            const randomizeProperty = (property, value) => {
+                if (Math.random() < 0.5) { // 50% chance of applying randomization to each property
+                    window.navigator[property] = value;
+                }
+            };
+    
+            // Randomize selected properties
+            randomizeProperty('hardwareConcurrency', Math.floor(Math.random() * 8)); // Randomize hardwareConcurrency between 0 and 7
+            randomizeProperty('deviceMemory', `${Math.floor(Math.random() * 16)}GB`); // Randomize deviceMemory between 0GB and 15GB
+            randomizeProperty('platform', Math.random() < 0.5 ? 'Win32' : 'Linux'); // Randomize platform between Win32 and Linux with equal probability
+            randomizeProperty('userAgent', ''); // Empty userAgent string
+            randomizeProperty('language', Math.random() < 0.5 ? 'en-US' : 'en-GB'); // Randomize language between en-US and en-GB with equal probability
+    
+            // Define getter functions for properties to return randomized values
+            for (const property in window.navigator) {
+                if (typeof window.navigator[property] === 'function') continue; // Skip methods
+                Object.defineProperty(window.navigator, property, {
+                    get: () => Math.random() < 0.5 ? originalNavigator[property] : window.navigator[property]
+                });
+            }
+        }
+    })();
+    
 	(function () { // Screen size
 		let screenSize = [1920, 1080];
 		screen.availWidth && setValue(screen, "availWidth", screenSize[0]);
