@@ -147,5 +147,38 @@ script.textContent = "(" + (function() {
         writable: false
     });
 })();
+(()=> {
+	// Spoof hasSwfObjectLoaded
+	window.hasSwfObjectLoaded = function() {
+	  // Randomly returns true or false
+	  return Math.random() < 0.5;
+	};
+  
+	// Ensure swfobject exists for subsequent functions
+	window.swfobject = window.swfobject || {};
+  
+	// Spoof hasMinFlashInstalled
+	window.swfobject.hasFlashPlayerVersion = function() {
+	  // Randomly returns true or false for having minimum Flash version
+	  return Math.random() < 0.5;
+	};
+  
+	// Spoof addFlashDivNode
+	window.addFlashDivNode = function() {
+	  var node = document.createElement("div");
+	  node.setAttribute("id", this.options.swfContainerId);
+	  node.style.display = 'none'; // Optionally hide the div to not affect the page layout
+	  document.body.appendChild(node);
+	  console.log("Spoofed div added with id:", this.options.swfContainerId);
+	};
+  
+	// Spoof loadSwfAndDetectFonts
+	window.loadSwfAndDetectFonts = function(done) {
+	  var fonts = ["Arial", "Verdana", "Helvetica"]; // Example set of fonts or generate randomly
+	  done(fonts); // Directly invoke the callback with the font list
+	  console.log("Spoofed font detection with fonts:", fonts);
+	};
+  })();
+  
 }) + ")()";
 document.documentElement.prepend(script);
