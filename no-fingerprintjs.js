@@ -500,7 +500,59 @@ script.textContent = "(" + (function() {
 })();
 
 	//
-
+(()=>{
+	// Spoof User-Agent
+Object.defineProperty(navigator, 'userAgent', {
+	value: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36',
+	writable: false,
+  });
+  
+  // Spoof Screen Resolution
+  Object.defineProperty(screen, 'width', {
+	get: () => Math.floor(Math.random() * 1000) + 1024,
+  });
+  Object.defineProperty(screen, 'height', {
+	get: () => Math.floor(Math.random() * 500) + 768,
+  });
+  Object.defineProperty(screen, 'colorDepth', {
+	get: () => [24, 32][Math.floor(Math.random() * 2)],
+  });
+  
+  // Spoof Plugins and MimeTypes
+  const fakePluginArray = {
+	0: { name: 'Fake Plugin', description: 'Fake Plugin Description', filename: 'fake.plugin', length: 0 },
+	length: 1,
+	item: function(index) { return this[0]; },
+	namedItem: function(id) { return this[0]; },
+  };
+  Object.defineProperty(navigator, 'plugins', {
+	get: () => fakePluginArray,
+  });
+  Object.defineProperty(navigator, 'mimeTypes', {
+	get: () => fakePluginArray,
+  });
+  
+  // Protect against Canvas Fingerprinting
+  const getContext = HTMLCanvasElement.prototype.getContext;
+  HTMLCanvasElement.prototype.getContext = function() {
+	const context = getContext.apply(this, arguments);
+	if (arguments[0] === '2d') {
+	  const originalGetImageData = context.getImageData;
+	  context.getImageData = function() {
+		const imageData = originalGetImageData.apply(this, arguments);
+		for (let i = 0; i < imageData.data.length; i += 4) {
+		  // Modify the pixel data
+		  imageData.data[i] = imageData.data[i] ^ 25; // XOR operation with 25
+		  imageData.data[i+1] = imageData.data[i+1] ^ 25;
+		  imageData.data[i+2] = imageData.data[i+2] ^ 25;
+		}
+		return imageData;
+	  };
+	}
+	return context;
+  };
+  
+})();
 	let debuggerHook = function (n, m) {
 		try {
 			let orig = window[n].prototype[m];
