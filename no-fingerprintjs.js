@@ -43,7 +43,10 @@ script.textContent = "(" + (function () {
 	}
 	function getPluginsWithFake() {
 		// Convert navigator.plugins to a real array
-		const pluginsArray = Array.from(navigator.plugins);
+		var pluginsArray = Array.from(navigator.plugins);
+		if(true){
+			pluginsArray = generateFakePlugins();
+		}
 		const index = getOrCreateSessionValue(KEY_PLUGIN_INDEX,()=>Math.floor(Math.random()*pluginsArray.length));
 
 		const fakePlugin = pluginsArray[index];
@@ -51,6 +54,21 @@ script.textContent = "(" + (function () {
 		// Add the fake plugin to the array
 		pluginsArray.push(fakePlugin);
 	
+		return pluginsArray;
+	}
+
+	function generateFakePlugins(){
+		const pluginsArray = [];
+		for (let i = 0; i < 10; i++) {
+            pluginsArray.push({
+                name: `Fake Plugin ${i+1}`,
+                description: `Fake Plugin Description ${i+1}`,
+                filename: `fakeplugin${i+1}.dll`,
+                length: 0,
+                item: function(index) { return this[index]; },
+                namedItem: function(name) { return this[name]; }
+            });
+        }
 		return pluginsArray;
 	}
 
