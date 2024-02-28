@@ -1,17 +1,24 @@
 let script = document.createElement("script");
 script.textContent = "(" + (function () {
 	"use strict";
-	const KEY_CANVAS_HEIGHT = "canvasheight";
-	const KEY_CANVAS_WIDTH = "canvaswidth";
-	const KEY_CANVAS_TEXT_X = "canvastextx";
-	const KEY_CANVAS_TEXT_Y = "canvastexty";
-	const KEY_CANVAS_FONT_SIZE = "canvasfontsize";
+	const KEY_CANVAS_HEIGHT = "canvasHeight";
+	const KEY_CANVAS_WIDTH = "canvasWidth";
+	const KEY_CANVAS_TEXT_X = "canvasTextX";
+	const KEY_CANVAS_TEXT_Y = "canvasTextY";
+	const KEY_CANVAS_FONT_SIZE = "canvasFontSize";
 
-	const KEY_FONT_OFFSET_HEIGHT = "fontoffsetheight";
-	const KEY_FONT_OFFSET_WIDTH = "fontoffsetwidth";
-	const KEY_AUDIO_TIME_OFFSET = "audiooffset";
+	const KEY_WEBGL_COLOR_R = "webglColorR";
+	const KEY_WEBGL_COLOR_G = "webglColorG";
+	const KEY_WEBGL_COLOR_B = "webglColorB";
+
+	const KEY_FONT_OFFSET_HEIGHT = "fontOffsetHeight";
+	const KEY_FONT_OFFSET_WIDTH = "fontOffsetWidth";
+	const KEY_AUDIO_TIME_OFFSET = "audioOffset";
+	const KEY_PLUGIN_INDEX = "pluginIndex";
 	const RANDOMNESS = 1
 	const useSessionStorage = true; // Set this to false to disable sessionStorage
+
+	//Helper functions
 	function randomFloat(min, max) {
 		return Math.random() * (max - min) + min;
 	}
@@ -34,7 +41,21 @@ script.textContent = "(" + (function () {
 		}
 		return parseFloat(value);
 	}
-	//Canvas 2
+	function getPluginsWithFake() {
+		// Convert navigator.plugins to a real array
+		const pluginsArray = Array.from(navigator.plugins);
+		const index = getOrCreateSessionValue(KEY_PLUGIN_INDEX,()=>Math.floor(Math.random()*pluginsArray.length));
+
+		const fakePlugin = pluginsArray[index];
+	
+		// Add the fake plugin to the array
+		pluginsArray.push(fakePlugin);
+	
+		return pluginsArray;
+	}
+
+
+	//Canvas
 	(() => {
 		// Spoofing canvas size
 		const originalGetContext = HTMLCanvasElement.prototype.getContext;
@@ -67,6 +88,68 @@ script.textContent = "(" + (function () {
 	 };
 	})();
 
+	//WebGl Clear Color
+	(()=> {
+		const originalWebGLClearColor = WebGLRenderingContext.prototype.clearColor;
+		WebGLRenderingContext.prototype.clearColor = function(r, g, b, a) {
+			// Add a small amount of noise to each color channel
+			const noiseIntensity = 0.01; // Adjust the intensity of the noise here
+			const newR = getOrCreateSessionValue(KEY_WEBGL_COLOR_R,()=>Math.min(Math.max(0, r + (Math.random() * noiseIntensity - noiseIntensity / 2)), 1));
+			const newG = getOrCreateSessionValue(KEY_WEBGL_COLOR_G,()=> Math.min(Math.max(0, g + (Math.random() * noiseIntensity - noiseIntensity / 2)), 1));
+			const newB = getOrCreateSessionValue(KEY_WEBGL_COLOR_B,()=>Math.min(Math.max(0, b + (Math.random() * noiseIntensity - noiseIntensity / 2)), 1));
+			// Call the original clearColor function with the modified values
+			return originalWebGLClearColor.call(this, newR, newG, newB, a);
+		};
+	
+		// Repeat for WebGL2RenderingContext if your application uses WebGL 2
+		if (typeof WebGL2RenderingContext !== 'undefined') {
+			const originalWebGL2ClearColor = WebGL2RenderingContext.prototype.clearColor;
+			WebGL2RenderingContext.prototype.clearColor = function(r, g, b, a) {
+				const noiseIntensity = 0.01; // Adjust the intensity of the noise here
+				const newR = Math.min(Math.max(0, r + (Math.random() * noiseIntensity - noiseIntensity / 2)), 1);
+				const newG = Math.min(Math.max(0, g + (Math.random() * noiseIntensity - noiseIntensity / 2)), 1);
+				const newB = Math.min(Math.max(0, b + (Math.random() * noiseIntensity - noiseIntensity / 2)), 1);
+				return originalWebGL2ClearColor.call(this, newR, newG, newB, a);
+			};
+		}
+	})();
+
+	//WebGl params
+	(()=> {
+		const originalGetParameter = WebGLRenderingContext.prototype.getParameter;
+		WebGLRenderingContext.prototype.getParameter = function(parameter) {
+			// Check if the requested parameter is BLUE_BITS
+			if (parameter === this.BLUE_BITS) {
+				// Get the original BLUE_BITS value
+				const originalValue = originalGetParameter.call(this, parameter);
+				
+				// Add a small amount of noise
+				// For demonstration, let's just add or subtract 1 (you can adjust this as needed)
+				const noise = Math.random() > 0.5 ? 1 : -1;
+				const newValue = originalValue + noise;
+	
+				// Ensure the modified value doesn't go below 0
+				return Math.max(0, newValue);
+			}
+	
+			// For all other parameters, return the original value
+			return originalGetParameter.call(this, parameter);
+		};
+	
+		// Repeat for WebGL2RenderingContext if your application uses WebGL 2
+		if (typeof WebGL2RenderingContext !== 'undefined') {
+			const originalGetParameterWebGL2 = WebGL2RenderingContext.prototype.getParameter;
+			WebGL2RenderingContext.prototype.getParameter = function(parameter) {
+				if (parameter === this.BLUE_BITS) {
+					const originalValue = originalGetParameterWebGL2.call(this, parameter);
+					const noise = Math.random() > 0.5 ? 1 : -1;
+					const newValue = originalValue + noise;
+					return Math.max(0, newValue);
+				}
+				return originalGetParameterWebGL2.call(this, parameter);
+			};
+		}
+	})();
 
 	//Font
 	(() => {
@@ -128,6 +211,31 @@ script.textContent = "(" + (function () {
 		};
 	})();
 
+//Navigor
+(()=> {
+    // Preserve the original navigator properties in case we need them
+	const plugins = getPluginsWithFake();
+    const originalNavigator = navigator;
+    // Create a proxy to override the navigator properties
+    const spoofedNavigator = new Proxy(originalNavigator, {
+        get(target, prop) {
+            switch (prop) {
+                case 'plugins':
+					return plugins;
+                default:
+                    // Return the original property for everything else
+                    return target[prop];
+            }
+        }
+    });
+	try {
+        Object.defineProperty(window, 'navigator', {
+            value: spoofedNavigator
+        });
+    } catch (e) {
+        console.error("Failed to spoof navigator:", e);
+    }
+})();
 
 
 }) + ")()";
