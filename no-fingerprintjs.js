@@ -10,12 +10,16 @@ script.textContent = "(" + (function () {
 	const KEY_WEBGL_COLOR_R = "webglColorR";
 	const KEY_WEBGL_COLOR_G = "webglColorG";
 	const KEY_WEBGL_COLOR_B = "webglColorB";
+	const KEY_WEBGL_BIT_BLUE = "webglBitBlue";
+	const KEY_WEBGL_BIT_GREEN = "webglBitGreen";
+	const KEY_WEBGL_BIT_RED = "webglBitRED";
+
 
 	const KEY_FONT_OFFSET_HEIGHT = "fontOffsetHeight";
 	const KEY_FONT_OFFSET_WIDTH = "fontOffsetWidth";
 	const KEY_AUDIO_TIME_OFFSET = "audioOffset";
 	const KEY_PLUGIN_INDEX = "pluginIndex";
-	const RANDOMNESS = 1
+	const RANDOMNESS = 2
 	const useSessionStorage = true; // Set this to false to disable sessionStorage
 
 	//Helper functions
@@ -44,31 +48,30 @@ script.textContent = "(" + (function () {
 	function getPluginsWithFake() {
 		// Convert navigator.plugins to a real array
 		var pluginsArray = Array.from(navigator.plugins);
-		if(pluginsArray.length === 0){
-			pluginsArray = generateFakePlugins();
-		}
-		const index = getOrCreateSessionValue(KEY_PLUGIN_INDEX,()=>Math.floor(Math.random()*pluginsArray.length));
+		var fakeplugins = generateFakePlugins();
+		pluginsArray.push(...fakeplugins);
+		const index = getOrCreateSessionValue(KEY_PLUGIN_INDEX, () => Math.floor(Math.random() * pluginsArray.length));
 
 		const fakePlugin = pluginsArray[index];
-	
+
 		// Add the fake plugin to the array
 		pluginsArray.push(fakePlugin);
-	
+
 		return pluginsArray;
 	}
 
-	function generateFakePlugins(){
+	function generateFakePlugins() {
 		const pluginsArray = [];
 		for (let i = 0; i < 10; i++) {
-            pluginsArray.push({
-                name: `Fake Plugin ${i+1}`,
-                description: `Fake Plugin Description ${i+1}`,
-                filename: `fakeplugin${i+1}.dll`,
-                length: 0,
-                item: function(index) { return this[index]; },
-                namedItem: function(name) { return this[name]; }
-            });
-        }
+			pluginsArray.push({
+				name: `Fake Plugin ${i + 1}`,
+				description: `Fake Plugin Description ${i + 1}`,
+				filename: `fakeplugin${i + 1}.dll`,
+				length: 0,
+				item: function (index) { return this[index]; },
+				namedItem: function (name) { return this[name]; }
+			});
+		}
 		return pluginsArray;
 	}
 
@@ -90,13 +93,13 @@ script.textContent = "(" + (function () {
 		 let adjustedY = addNoise(y,KEY_CANVAS_TEXT_Y);
 
 		 const fontRegex = /(\d+)(px|pt|em|%|rem)/; // Regex to extract font size and units
-        const match = this.font.match(fontRegex);
-        if (match) {
-            const originalSize = parseInt(match[1], 10);
-            const unit = match[2];
-            const newSize = addNoise(originalSize,KEY_CANVAS_FONT_SIZE);
-            this.font = this.font.replace(fontRegex, `${newSize}${unit}`);
-        }
+		const match = this.font.match(fontRegex);
+		if (match) {
+			const originalSize = parseInt(match[1], 10);
+			const unit = match[2];
+			const newSize = addNoise(originalSize,KEY_CANVAS_FONT_SIZE);
+			this.font = this.font.replace(fontRegex, `${newSize}${unit}`);
+		}
 		 // Call the original fillText with adjusted coordinates
 		 if (maxWidth === undefined) {
 			 originalFillText.call(this, text, adjustedX, adjustedY);
@@ -107,7 +110,7 @@ script.textContent = "(" + (function () {
 	})();
 
 	//WebGl Clear Color
-	(()=> {
+	/*(()=> {
 		const originalWebGLClearColor = WebGLRenderingContext.prototype.clearColor;
 		WebGLRenderingContext.prototype.clearColor = function(r, g, b, a) {
 			// Add a small amount of noise to each color channel
@@ -115,6 +118,7 @@ script.textContent = "(" + (function () {
 			const newR = getOrCreateSessionValue(KEY_WEBGL_COLOR_R,()=>Math.min(Math.max(0, r + (Math.random() * noiseIntensity - noiseIntensity / 2)), 1));
 			const newG = getOrCreateSessionValue(KEY_WEBGL_COLOR_G,()=> Math.min(Math.max(0, g + (Math.random() * noiseIntensity - noiseIntensity / 2)), 1));
 			const newB = getOrCreateSessionValue(KEY_WEBGL_COLOR_B,()=>Math.min(Math.max(0, b + (Math.random() * noiseIntensity - noiseIntensity / 2)), 1));
+			console.log("WebGl Spoofing: "+"newRed: "+newR+" newG: "+newG+" newB: "+newB)
 			// Call the original clearColor function with the modified values
 			return originalWebGLClearColor.call(this, newR, newG, newB, a);
 		};
@@ -127,50 +131,74 @@ script.textContent = "(" + (function () {
 				const newR = Math.min(Math.max(0, r + (Math.random() * noiseIntensity - noiseIntensity / 2)), 1);
 				const newG = Math.min(Math.max(0, g + (Math.random() * noiseIntensity - noiseIntensity / 2)), 1);
 				const newB = Math.min(Math.max(0, b + (Math.random() * noiseIntensity - noiseIntensity / 2)), 1);
+				console.log("WebGl2 Spoofing: "+"newRed: "+newR+" newG: "+newG+" newB: "+newB)
+
 				return originalWebGL2ClearColor.call(this, newR, newG, newB, a);
 			};
 		}
-	})();
+	})();*/
+
 
 	//WebGl params
-	(()=> {
+	(() => {
 		const originalGetParameter = WebGLRenderingContext.prototype.getParameter;
-		WebGLRenderingContext.prototype.getParameter = function(parameter) {
-			// Check if the requested parameter is BLUE_BITS
-			if (parameter === this.BLUE_BITS) {
-				// Get the original BLUE_BITS value
-				const originalValue = originalGetParameter.call(this, parameter);
-				
-				// Add a small amount of noise
-				// For demonstration, let's just add or subtract 1 (you can adjust this as needed)
-				const noise = Math.random() > 0.5 ? 1 : -1;
-				const newValue = originalValue + noise;
-	
-				// Ensure the modified value doesn't go below 0
-				return Math.max(0, newValue);
+		WebGLRenderingContext.prototype.getParameter = function (parameter) {
+			const originalValue = originalGetParameter.call(this, parameter);
+			switch (parameter) {
+				case this.BLUE_BITS:
+					const bnoise = getOrCreateSessionValue(KEY_WEBGL_BIT_BLUE, () => Math.floor(Math.random() * RANDOMNESS));
+					const bnewValue = originalValue + bnoise;
+					// Ensure the modified value doesn't go below 0
+					return Math.max(0, bnewValue);
+				case this.GREEN_BITS:
+					const gnoise = getOrCreateSessionValue(KEY_WEBGL_BIT_GREEN, () => Math.floor(Math.random() * RANDOMNESS));
+					const gnewValue = originalValue + gnoise;
+					// Ensure the modified value doesn't go below 0
+					return Math.max(0, gnewValue);
+				case this.RED_BITS:
+					const rnoise = getOrCreateSessionValue(KEY_WEBGL_BIT_RED, () => Math.floor(Math.random() * RANDOMNESS));
+					const rnewValue = originalValue + rnoise;
+					// Ensure the modified value doesn't go below 0
+					return Math.max(0, rnewValue);
+				default:
+					return originalValue;
 			}
-	
+
+
 			// For all other parameters, return the original value
 			return originalGetParameter.call(this, parameter);
 		};
-	
+
 		// Repeat for WebGL2RenderingContext if your application uses WebGL 2
 		if (typeof WebGL2RenderingContext !== 'undefined') {
 			const originalGetParameterWebGL2 = WebGL2RenderingContext.prototype.getParameter;
-			WebGL2RenderingContext.prototype.getParameter = function(parameter) {
-				if (parameter === this.BLUE_BITS) {
-					const originalValue = originalGetParameterWebGL2.call(this, parameter);
-					const noise = Math.random() > 0.5 ? 1 : -1;
-					const newValue = originalValue + noise;
-					return Math.max(0, newValue);
+			WebGL2RenderingContext.prototype.getParameter = function (parameter) {
+				const originalValue = originalGetParameterWebGL2.call(this, parameter);
+				switch (parameter) {
+					case this.BLUE_BITS:
+						const bnoise = getOrCreateSessionValue(KEY_WEBGL_BIT_BLUE, () => Math.floor(Math.random() * RANDOMNESS));
+						const bnewValue = originalValue + bnoise;
+						// Ensure the modified value doesn't go below 0
+						return Math.max(0, bnewValue);
+					case this.GREEN_BITS:
+						const gnoise = getOrCreateSessionValue(KEY_WEBGL_BIT_GREEN, () => Math.floor(Math.random() * RANDOMNESS));
+						const gnewValue = originalValue + gnoise;
+						// Ensure the modified value doesn't go below 0
+						return Math.max(0, gnewValue);
+					case this.RED_BITS:
+						const rnoise = getOrCreateSessionValue(KEY_WEBGL_BIT_RED, () => Math.floor(Math.random() * RANDOMNESS));
+						const rnewValue = originalValue + rnoise;
+						// Ensure the modified value doesn't go below 0
+						return Math.max(0, rnewValue);
+					default:
+						return originalValue;
 				}
-				return originalGetParameterWebGL2.call(this, parameter);
 			};
 		}
 	})();
 
 	//Font
-	(() => {
+	/*(() => {
 		const originalOffsetWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetWidth');
 		const originalOffsetHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetHeight');
 
@@ -185,22 +213,13 @@ script.textContent = "(" + (function () {
 				return addNoise(originalOffsetHeight.get.call(this),KEY_FONT_OFFSET_HEIGHT);
 			}
 		});
-	})();
+	})();*/
 
 	//Audio
 	(() => {
 		const originalCreateOscillator = AudioContext.prototype.createOscillator;
 		const originalCreateBuffer = AudioContext.prototype.createBuffer;
 		const originalGetChannelData = AudioBuffer.prototype.getChannelData;
-
-		/*function getOrCreateSessionValue(key, generator) {
-			let value = sessionStorage.getItem(key);
-			if (value === null) {
-				value = generator();
-				sessionStorage.setItem(key, value);
-			}
-			return parseFloat(value);
-		}*/
 
 		AudioContext.prototype.createOscillator = function () {
 			const oscillator = originalCreateOscillator.apply(this, arguments);
@@ -229,31 +248,31 @@ script.textContent = "(" + (function () {
 		};
 	})();
 
-//Navigor
-(()=> {
-    // Preserve the original navigator properties in case we need them
-	const plugins = getPluginsWithFake();
-    const originalNavigator = navigator;
-    // Create a proxy to override the navigator properties
-    const spoofedNavigator = new Proxy(originalNavigator, {
-        get(target, prop) {
-            switch (prop) {
-                case 'plugins':
-					return plugins;
-                default:
-                    // Return the original property for everything else
-                    return target[prop];
-            }
-        }
-    });
-	try {
-        Object.defineProperty(window, 'navigator', {
-            value: spoofedNavigator
-        });
-    } catch (e) {
-        console.error("Failed to spoof navigator:", e);
-    }
-})();
+	//Navigor
+	(() => {
+		// Preserve the original navigator properties in case we need them
+		const plugins = getPluginsWithFake();
+		const originalNavigator = navigator;
+		// Create a proxy to override the navigator properties
+		const spoofedNavigator = new Proxy(originalNavigator, {
+			get(target, prop) {
+				switch (prop) {
+					case 'plugins':
+						return plugins;
+					default:
+						// Return the original property for everything else
+						return target[prop];
+				}
+			}
+		});
+		try {
+			Object.defineProperty(window, 'navigator', {
+				value: spoofedNavigator
+			});
+		} catch (e) {
+			console.error("Failed to spoof navigator:", e);
+		}
+	})();
 
 
 }) + ")()";
