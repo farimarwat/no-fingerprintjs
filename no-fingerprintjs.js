@@ -60,33 +60,58 @@ script.textContent = "(" + (function () {
 		}
 		return value;
 	}
+	function generateFakePlugins(numberOfFakePlugins = 5) {
+		let fakePlugins = [];
+	
+		for (let i = 0; i < numberOfFakePlugins; i++) {
+			// Generate fake plugin details
+			let fakePlugin = {
+				name: `Fake Plugin ${i + 1}`,
+				description: `Description for Fake Plugin ${i + 1}`,
+				filename: `fakeplugin${i + 1}.dll`,
+				mimeTypes: [{
+					type: `fake/mimetype${i + 1}`,
+					description: `Fake MIME type ${i + 1}`,
+					suffixes: `fake${i + 1}`
+				}]
+			};
+			fakePlugins.push(fakePlugin);
+		}
+	
+		return fakePlugins;
+	}
+	
+	// Example usage:
+	var fakePluginsArray = generateFakePlugins(5); // Generates 5 fake plugins
+	console.log(fakePluginsArray);
+	
 	function getPluginsWithFake() {
 		// Convert navigator.plugins to a real array
-		var pluginsArray = Array.from(navigator.plugins || []);
+		var pluginsArray = [];
+		if (!navigator.plugins || navigator.plugins.length === 0) {
+			pluginsArray = generateFakePlugins();
+		} 
+
+		pluginsArray = Array.from(navigator.plugins);
 		const index = getOrCreateFloatSessionValue(KEY_PLUGIN_INDEX, () => Math.floor(Math.random() * pluginsArray.length));
-		const name = getOrCreateStringSessionValue(KEY_PLUGIN_NAME,()=>pluginsArray[Math.floor(Math.random() * pluginsArray.length)].name);
+		const name = getOrCreateStringSessionValue(KEY_PLUGIN_NAME, () => pluginsArray[Math.floor(Math.random() * pluginsArray.length)].name);
 		const plugin = pluginsArray[index];
 		let fakePlugin = {
-            name: name,
-            description: plugin.description,
-            filename: plugin.filename,
-            // Listing the MIME types supported by the plugin
-            mimeTypes: Array.from(plugin).map(mimeType => ({
-                type: mimeType.type,
-                description: mimeType.description,
-                suffixes: mimeType.suffixes
-            }))
-        };
+			name: name,
+			description: plugin.description,
+			filename: plugin.filename,
+			// Listing the MIME types supported by the plugin
+			mimeTypes: Array.from(plugin).map(mimeType => ({
+				type: mimeType.type,
+				description: mimeType.description,
+				suffixes: mimeType.suffixes
+			}))
+		};
 		// Add the fake plugin to the array
 		pluginsArray.push(fakePlugin);
-
 		return pluginsArray;
 	}
 
-	function generateFakePlugin(pluginsArray) {
-		
-		return pluginsArray;
-	}
 
 
 	//Canvas
@@ -94,32 +119,32 @@ script.textContent = "(" + (function () {
 		// Spoofing canvas size
 		const originalGetContext = HTMLCanvasElement.prototype.getContext;
 		HTMLCanvasElement.prototype.getContext = function (type, contextAttributes) {
-			this.width = addNoise(this.width,KEY_CANVAS_WIDTH);
-			this.height = addNoise(this.height,KEY_CANVAS_HEIGHT);
+			this.width = addNoise(this.width, KEY_CANVAS_WIDTH);
+			this.height = addNoise(this.height, KEY_CANVAS_HEIGHT);
 			return originalGetContext.call(this, type, contextAttributes);
 		};
 
-	 // Override fillText on the CanvasRenderingContext2D prototype
-	 const originalFillText = CanvasRenderingContext2D.prototype.fillText;
-	 CanvasRenderingContext2D.prototype.fillText = function(text, x, y, maxWidth) {
-		 let adjustedX = addNoise(x,KEY_CANVAS_TEXT_X);
-		 let adjustedY = addNoise(y,KEY_CANVAS_TEXT_Y);
+		// Override fillText on the CanvasRenderingContext2D prototype
+		const originalFillText = CanvasRenderingContext2D.prototype.fillText;
+		CanvasRenderingContext2D.prototype.fillText = function (text, x, y, maxWidth) {
+			let adjustedX = addNoise(x, KEY_CANVAS_TEXT_X);
+			let adjustedY = addNoise(y, KEY_CANVAS_TEXT_Y);
 
-		 const fontRegex = /(\d+)(px|pt|em|%|rem)/; // Regex to extract font size and units
-		const match = this.font.match(fontRegex);
-		if (match) {
-			const originalSize = parseInt(match[1], 10);
-			const unit = match[2];
-			const newSize = addNoise(originalSize,KEY_CANVAS_FONT_SIZE);
-			this.font = this.font.replace(fontRegex, `${newSize}${unit}`);
-		}
-		 // Call the original fillText with adjusted coordinates
-		 if (maxWidth === undefined) {
-			 originalFillText.call(this, text, adjustedX, adjustedY);
-		 } else {
-			 originalFillText.call(this, text, adjustedX, adjustedY, maxWidth);
-		 }
-	 };
+			const fontRegex = /(\d+)(px|pt|em|%|rem)/; // Regex to extract font size and units
+			const match = this.font.match(fontRegex);
+			if (match) {
+				const originalSize = parseInt(match[1], 10);
+				const unit = match[2];
+				const newSize = addNoise(originalSize, KEY_CANVAS_FONT_SIZE);
+				this.font = this.font.replace(fontRegex, `${newSize}${unit}`);
+			}
+			// Call the original fillText with adjusted coordinates
+			if (maxWidth === undefined) {
+				originalFillText.call(this, text, adjustedX, adjustedY);
+			} else {
+				originalFillText.call(this, text, adjustedX, adjustedY, maxWidth);
+			}
+		};
 	})();
 
 	//WebGl Clear Color
