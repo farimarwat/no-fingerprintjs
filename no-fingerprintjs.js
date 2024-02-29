@@ -62,7 +62,8 @@ script.textContent = "(" + (function () {
 	}
 	function getPluginsWithFake() {
 		// Convert navigator.plugins to a real array
-		var pluginsArray = Array.from(navigator.plugins);
+		var pluginsArray = [];
+		pluginsArray = Array.from(navigator.plugins);
 		const index = getOrCreateFloatSessionValue(KEY_PLUGIN_INDEX, () => Math.floor(Math.random() * pluginsArray.length));
 		const name = getOrCreateStringSessionValue(KEY_PLUGIN_NAME,()=>pluginsArray[Math.floor(Math.random() * pluginsArray.length)].name);
 		const plugin = pluginsArray[index];
