@@ -81,18 +81,15 @@ script.textContent = "(" + (function () {
 		return fakePlugins;
 	}
 	
-	// Example usage:
-	var fakePluginsArray = generateFakePlugins(5); // Generates 5 fake plugins
-	console.log(fakePluginsArray);
-	
 	function getPluginsWithFake() {
 		// Convert navigator.plugins to a real array
 		var pluginsArray = [];
 		if (!navigator.plugins || navigator.plugins.length === 0) {
-			pluginsArray = generateFakePlugins();
+			
 		} 
 
-		pluginsArray = Array.from(navigator.plugins);
+		//pluginsArray = Array.from(navigator.plugins);
+		pluginsArray = generateFakePlugins(5);
 		const index = getOrCreateFloatSessionValue(KEY_PLUGIN_INDEX, () => Math.floor(Math.random() * pluginsArray.length));
 		const name = getOrCreateStringSessionValue(KEY_PLUGIN_NAME, () => pluginsArray[Math.floor(Math.random() * pluginsArray.length)].name);
 		const plugin = pluginsArray[index];
