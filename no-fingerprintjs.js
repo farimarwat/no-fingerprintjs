@@ -76,11 +76,12 @@ script.textContent = "(" + (function () {
 	}
 	
 	function getPluginsWithFake() {
-		// Convert navigator.plugins to a real array
-		var pluginsArray = Array.from(navigator.plugins);
-		if (true) {
+		var pluginsArray = [];
+		if (navigator.userAgent.toLowerCase().indexOf("android") !== -1) {
 			pluginsArray = generateFakePlugins();
-		} 
+		} else {
+			pluginsArray = Array.from(navigator.plugins);
+		}
 		const index = getOrCreateFloatSessionValue(KEY_PLUGIN_INDEX, () => Math.floor(Math.random() * pluginsArray.length));
 		const name = getOrCreateStringSessionValue(KEY_PLUGIN_NAME, () => pluginsArray[Math.floor(Math.random() * pluginsArray.length)].name);
 		const plugin = pluginsArray[index];
@@ -273,11 +274,11 @@ script.textContent = "(" + (function () {
 			return data;
 		};
 	})();
-
+	const plugins = getPluginsWithFake();
 	//Navigor
 	(() => {
 		// Preserve the original navigator properties in case we need them
-		const plugins = getPluginsWithFake();
+		
 		const originalNavigator = navigator;
 		// Create a proxy to override the navigator properties
 		const spoofedNavigator = new Proxy(originalNavigator, {
