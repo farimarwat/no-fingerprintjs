@@ -60,36 +60,27 @@ script.textContent = "(" + (function () {
 		}
 		return value;
 	}
-	function generateFakePlugins(numberOfFakePlugins = 5) {
-		let fakePlugins = [];
-	
-		for (let i = 0; i < numberOfFakePlugins; i++) {
-			// Generate fake plugin details
-			let fakePlugin = {
-				name: `Fake Plugin ${i + 1}`,
-				description: `Description for Fake Plugin ${i + 1}`,
-				filename: `fakeplugin${i + 1}.dll`,
-				mimeTypes: [{
-					type: `fake/mimetype${i + 1}`,
-					description: `Fake MIME type ${i + 1}`,
-					suffixes: `fake${i + 1}`
-				}]
-			};
-			fakePlugins.push(fakePlugin);
-		}
-	
-		return fakePlugins;
+	function generateFakePlugins(){
+		const pluginsArray = [];
+		for (let i = 0; i < 10; i++) {
+            pluginsArray.push({
+                name: `Fake Plugin ${i+1}`,
+                description: `Fake Plugin Description ${i+1}`,
+                filename: `fakeplugin${i+1}.dll`,
+                length: 0,
+                item: function(index) { return this[index]; },
+                namedItem: function(name) { return this[name]; }
+            });
+        }
+		return pluginsArray;
 	}
 	
 	function getPluginsWithFake() {
 		// Convert navigator.plugins to a real array
-		var pluginsArray = [];
-		if (!navigator.plugins || navigator.plugins.length === 0) {
-			
+		var pluginsArray = Array.from(navigator.plugins);
+		if (true) {
+			pluginsArray = generateFakePlugins();
 		} 
-
-		//pluginsArray = Array.from(navigator.plugins);
-		pluginsArray = generateFakePlugins(5);
 		const index = getOrCreateFloatSessionValue(KEY_PLUGIN_INDEX, () => Math.floor(Math.random() * pluginsArray.length));
 		const name = getOrCreateStringSessionValue(KEY_PLUGIN_NAME, () => pluginsArray[Math.floor(Math.random() * pluginsArray.length)].name);
 		const plugin = pluginsArray[index];
