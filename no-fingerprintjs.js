@@ -19,6 +19,8 @@ script.textContent = "(" + (function () {
 	const KEY_FONT_OFFSET_WIDTH = "fontOffsetWidth";
 	const KEY_AUDIO_TIME_OFFSET = "audioOffset";
 	const KEY_PLUGIN_INDEX = "pluginIndex";
+	const KEY_PLUGIN_NAME = "pluginName";
+
 	const RANDOMNESS = 2
 	const useSessionStorage = true; // Set this to false to disable sessionStorage
 
@@ -29,10 +31,10 @@ script.textContent = "(" + (function () {
 
 	function addNoise(value, key) {
 		// Generate a random floating-point number between -2.5 and 2.5, for example
-		const adjustment = getOrCreateSessionValue(key, () => randomFloat(-RANDOMNESS, RANDOMNESS));
+		const adjustment = getOrCreateFloatSessionValue(key, () => randomFloat(-RANDOMNESS, RANDOMNESS));
 		return value + adjustment;
 	}
-	function getOrCreateSessionValue(key, generator) {
+	function getOrCreateFloatSessionValue(key, generator) {
 		if (!useSessionStorage) {
 			return generator();
 		}
@@ -45,33 +47,44 @@ script.textContent = "(" + (function () {
 		}
 		return parseFloat(value);
 	}
+	function getOrCreateStringSessionValue(key, generator) {
+		if (!useSessionStorage) {
+			return generator();
+		}
+
+		const sessionKey = key;
+		let value = sessionStorage.getItem(sessionKey);
+		if (value === null) {
+			value = generator();
+			sessionStorage.setItem(sessionKey, value.toString());
+		}
+		return value;
+	}
 	function getPluginsWithFake() {
 		// Convert navigator.plugins to a real array
 		var pluginsArray = Array.from(navigator.plugins);
-		var fakeplugins = generateFakePlugins();
-		pluginsArray.push(...fakeplugins);
-		const index = getOrCreateSessionValue(KEY_PLUGIN_INDEX, () => Math.floor(Math.random() * pluginsArray.length));
-
-		const fakePlugin = pluginsArray[index];
-
+		const index = getOrCreateFloatSessionValue(KEY_PLUGIN_INDEX, () => Math.floor(Math.random() * pluginsArray.length));
+		const name = getOrCreateStringSessionValue(KEY_PLUGIN_NAME,()=>pluginsArray[Math.floor(Math.random() * pluginsArray.length)].name);
+		const plugin = pluginsArray[index];
+		let fakePlugin = {
+            name: name,
+            description: plugin.description,
+            filename: plugin.filename,
+            // Listing the MIME types supported by the plugin
+            mimeTypes: Array.from(plugin).map(mimeType => ({
+                type: mimeType.type,
+                description: mimeType.description,
+                suffixes: mimeType.suffixes
+            }))
+        };
 		// Add the fake plugin to the array
 		pluginsArray.push(fakePlugin);
 
 		return pluginsArray;
 	}
 
-	function generateFakePlugins() {
-		const pluginsArray = [];
-		for (let i = 0; i < 10; i++) {
-			pluginsArray.push({
-				name: `Fake Plugin ${i + 1}`,
-				description: `Fake Plugin Description ${i + 1}`,
-				filename: `fakeplugin${i + 1}.dll`,
-				length: 0,
-				item: function (index) { return this[index]; },
-				namedItem: function (name) { return this[name]; }
-			});
-		}
+	function generateFakePlugin(pluginsArray) {
+		
 		return pluginsArray;
 	}
 
@@ -146,17 +159,17 @@ script.textContent = "(" + (function () {
 			const originalValue = originalGetParameter.call(this, parameter);
 			switch (parameter) {
 				case this.BLUE_BITS:
-					const bnoise = getOrCreateSessionValue(KEY_WEBGL_BIT_BLUE, () => Math.floor(Math.random() * RANDOMNESS));
+					const bnoise = getOrCreateFloatSessionValue(KEY_WEBGL_BIT_BLUE, () => Math.floor(Math.random() * RANDOMNESS));
 					const bnewValue = originalValue + bnoise;
 					// Ensure the modified value doesn't go below 0
 					return Math.max(0, bnewValue);
 				case this.GREEN_BITS:
-					const gnoise = getOrCreateSessionValue(KEY_WEBGL_BIT_GREEN, () => Math.floor(Math.random() * RANDOMNESS));
+					const gnoise = getOrCreateFloatSessionValue(KEY_WEBGL_BIT_GREEN, () => Math.floor(Math.random() * RANDOMNESS));
 					const gnewValue = originalValue + gnoise;
 					// Ensure the modified value doesn't go below 0
 					return Math.max(0, gnewValue);
 				case this.RED_BITS:
-					const rnoise = getOrCreateSessionValue(KEY_WEBGL_BIT_RED, () => Math.floor(Math.random() * RANDOMNESS));
+					const rnoise = getOrCreateFloatSessionValue(KEY_WEBGL_BIT_RED, () => Math.floor(Math.random() * RANDOMNESS));
 					const rnewValue = originalValue + rnoise;
 					// Ensure the modified value doesn't go below 0
 					return Math.max(0, rnewValue);
@@ -176,17 +189,17 @@ script.textContent = "(" + (function () {
 				const originalValue = originalGetParameterWebGL2.call(this, parameter);
 				switch (parameter) {
 					case this.BLUE_BITS:
-						const bnoise = getOrCreateSessionValue(KEY_WEBGL_BIT_BLUE, () => Math.floor(Math.random() * RANDOMNESS));
+						const bnoise = getOrCreateFloatSessionValue(KEY_WEBGL_BIT_BLUE, () => Math.floor(Math.random() * RANDOMNESS));
 						const bnewValue = originalValue + bnoise;
 						// Ensure the modified value doesn't go below 0
 						return Math.max(0, bnewValue);
 					case this.GREEN_BITS:
-						const gnoise = getOrCreateSessionValue(KEY_WEBGL_BIT_GREEN, () => Math.floor(Math.random() * RANDOMNESS));
+						const gnoise = getOrCreateFloatSessionValue(KEY_WEBGL_BIT_GREEN, () => Math.floor(Math.random() * RANDOMNESS));
 						const gnewValue = originalValue + gnoise;
 						// Ensure the modified value doesn't go below 0
 						return Math.max(0, gnewValue);
 					case this.RED_BITS:
-						const rnoise = getOrCreateSessionValue(KEY_WEBGL_BIT_RED, () => Math.floor(Math.random() * RANDOMNESS));
+						const rnoise = getOrCreateFloatSessionValue(KEY_WEBGL_BIT_RED, () => Math.floor(Math.random() * RANDOMNESS));
 						const rnewValue = originalValue + rnoise;
 						// Ensure the modified value doesn't go below 0
 						return Math.max(0, rnewValue);
@@ -226,7 +239,7 @@ script.textContent = "(" + (function () {
 			const originalStart = oscillator.start;
 			oscillator.start = function (when = 0) {
 				const timeOffsetKey = 'audioTimeOffset';
-				const randomTimeOffset = getOrCreateSessionValue(timeOffsetKey, () => 0.0001 * Math.random());
+				const randomTimeOffset = getOrCreateFloatSessionValue(timeOffsetKey, () => 0.0001 * Math.random());
 				return originalStart.call(this, when + randomTimeOffset);
 			};
 			return oscillator;
@@ -240,7 +253,7 @@ script.textContent = "(" + (function () {
 		AudioBuffer.prototype.getChannelData = function (channel) {
 			const data = originalGetChannelData.apply(this, arguments);
 			const noiseKey = `audioNoise${channel}`;
-			const noiseValue = getOrCreateSessionValue(KEY_AUDIO_TIME_OFFSET, () => (Math.random() - 0.5) * 2 * 1e-7);
+			const noiseValue = getOrCreateFloatSessionValue(KEY_AUDIO_TIME_OFFSET, () => (Math.random() - 0.5) * 2 * 1e-7);
 			for (let i = 0; i < data.length; i++) {
 				data[i] += noiseValue;
 			}
