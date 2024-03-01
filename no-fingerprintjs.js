@@ -1,3 +1,7 @@
+///@nfp-name: no-fingerprintjs
+//@nfp-version: 1.0
+
+
 let script = document.createElement("script");
 script.textContent = "(" + (function () {
 	"use strict";
@@ -18,8 +22,11 @@ script.textContent = "(" + (function () {
 	const KEY_PLUGIN_NAME = "pluginName";
 	const KEY_USERAGENT_SUFFIX = "userAgentSuffix"
 
+	//@nfp-randomness
 	const RANDOMNESS = 2
-	const useSessionStorage = false; // Set this to false to disable sessionStorage
+
+	//@nfp-session
+	const useSessionStorage = true;
 
 	//Helper functions
 	function randomFloat(min, max) {
