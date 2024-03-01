@@ -6,10 +6,6 @@ script.textContent = "(" + (function () {
 	const KEY_CANVAS_TEXT_X = "canvasTextX";
 	const KEY_CANVAS_TEXT_Y = "canvasTextY";
 	const KEY_CANVAS_FONT_SIZE = "canvasFontSize";
-
-	const KEY_WEBGL_COLOR_R = "webglColorR";
-	const KEY_WEBGL_COLOR_G = "webglColorG";
-	const KEY_WEBGL_COLOR_B = "webglColorB";
 	const KEY_WEBGL_BIT_BLUE = "webglBitBlue";
 	const KEY_WEBGL_BIT_GREEN = "webglBitGreen";
 	const KEY_WEBGL_BIT_RED = "webglBitRED";
@@ -20,15 +16,15 @@ script.textContent = "(" + (function () {
 	const KEY_AUDIO_TIME_OFFSET = "audioOffset";
 	const KEY_PLUGIN_INDEX = "pluginIndex";
 	const KEY_PLUGIN_NAME = "pluginName";
+	const KEY_USERAGENT_SUFFIX = "userAgentSuffix"
 
 	const RANDOMNESS = 2
-	const useSessionStorage = true; // Set this to false to disable sessionStorage
+	const useSessionStorage = false; // Set this to false to disable sessionStorage
 
 	//Helper functions
 	function randomFloat(min, max) {
 		return Math.random() * (max - min) + min;
 	}
-
 	function addNoise(value, key) {
 		// Generate a random floating-point number between -2.5 and 2.5, for example
 		const adjustment = getOrCreateFloatSessionValue(key, () => randomFloat(-RANDOMNESS, RANDOMNESS));
@@ -100,8 +96,13 @@ script.textContent = "(" + (function () {
 		pluginsArray.push(fakePlugin);
 		return pluginsArray;
 	}
+	function getUserAgent(){
+		return navigator.userAgent + getOrCreateStringSessionValue(KEY_USERAGENT_SUFFIX,()=>" ("+(Math.random() * RANDOMNESS).toFixed(2)+")");
+	}
 
-
+	//Global Vars
+	const plugins = getPluginsWithFake();
+	const userAgent = getUserAgent();
 
 	//Canvas
 	(() => {
@@ -274,7 +275,7 @@ script.textContent = "(" + (function () {
 			return data;
 		};
 	})();
-	const plugins = getPluginsWithFake();
+	
 	//Navigor
 	(() => {
 		// Preserve the original navigator properties in case we need them
@@ -286,6 +287,8 @@ script.textContent = "(" + (function () {
 				switch (prop) {
 					case 'plugins':
 						return plugins;
+					case 'userAgent':
+						return userAgent;
 					default:
 						// Return the original property for everything else
 						return target[prop];
