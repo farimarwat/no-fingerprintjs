@@ -1,5 +1,5 @@
-///@nfp-name: no-fingerprintjs
-//@nfp-version: 1.0
+//@script-name: no-fingerprintjs
+//@script-version: 1.0
 
 
 let script = document.createElement("script");
@@ -20,12 +20,9 @@ script.textContent = "(" + (function () {
 	const KEY_AUDIO_TIME_OFFSET = "audioOffset";
 	const KEY_PLUGIN_INDEX = "pluginIndex";
 	const KEY_PLUGIN_NAME = "pluginName";
-	const KEY_USERAGENT_SUFFIX = "userAgentSuffix"
+	const KEY_USERAGENT_SUFFIX = "userAgentSuffix";
 
-	//@nfp-randomness
-	const RANDOMNESS = 2
-
-	//@nfp-session
+	const RANDOMNESS = 2;
 	const useSessionStorage = true;
 
 	//Helper functions
@@ -103,13 +100,13 @@ script.textContent = "(" + (function () {
 		pluginsArray.push(fakePlugin);
 		return pluginsArray;
 	}
-	function getUserAgent(){
+	function getUserAgentRandomized(){
 		return navigator.userAgent + getOrCreateStringSessionValue(KEY_USERAGENT_SUFFIX,()=>" ("+(Math.random() * RANDOMNESS).toFixed(2)+")");
 	}
 
 	//Global Vars
 	const plugins = getPluginsWithFake();
-	const userAgent = getUserAgent();
+	const userAgent = getUserAgentRandomized();
 
 	//Canvas
 	(() => {
