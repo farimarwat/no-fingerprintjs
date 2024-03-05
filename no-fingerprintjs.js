@@ -13,6 +13,10 @@ script.textContent = "(" + (function () {
 	const KEY_WEBGL_BIT_BLUE = "webglBitBlue";
 	const KEY_WEBGL_BIT_GREEN = "webglBitGreen";
 	const KEY_WEBGL_BIT_RED = "webglBitRED";
+	const KEY_WEBGL_VERSION = "webglVersion";
+	const KEY_WEBGL_SLV = "webglShadedLanguageVersion";
+	const KEY_WEBGL_RENDERER = "webglRendered";
+	const KEY_WEBGL_EXTENSION = "webglExtension";
 
 
 	const KEY_FONT_OFFSET_HEIGHT = "fontOffsetHeight";
@@ -23,7 +27,7 @@ script.textContent = "(" + (function () {
 	const KEY_USERAGENT_SUFFIX = "userAgentSuffix";
 
 	const RANDOMNESS = 2;
-	const useSessionStorage = true;
+	const useSessionStorage = false;
 
 	//Helper functions
 	function randomFloat(min, max) {
@@ -60,21 +64,21 @@ script.textContent = "(" + (function () {
 		}
 		return value;
 	}
-	function generateFakePlugins(){
+	function generateFakePlugins() {
 		const pluginsArray = [];
 		for (let i = 0; i < 10; i++) {
-            pluginsArray.push({
-                name: `Fake Plugin ${i+1}`,
-                description: `Fake Plugin Description ${i+1}`,
-                filename: `fakeplugin${i+1}.dll`,
-                length: 0,
-                item: function(index) { return this[index]; },
-                namedItem: function(name) { return this[name]; }
-            });
-        }
+			pluginsArray.push({
+				name: `Fake Plugin ${i + 1}`,
+				description: `Fake Plugin Description ${i + 1}`,
+				filename: `fakeplugin${i + 1}.dll`,
+				length: 0,
+				item: function (index) { return this[index]; },
+				namedItem: function (name) { return this[name]; }
+			});
+		}
 		return pluginsArray;
 	}
-	
+
 	function getPluginsWithFake() {
 		var pluginsArray = [];
 		if (navigator.userAgent.toLowerCase().indexOf("android") !== -1) {
@@ -100,13 +104,15 @@ script.textContent = "(" + (function () {
 		pluginsArray.push(fakePlugin);
 		return pluginsArray;
 	}
-	function getUserAgentRandomized(){
-		return navigator.userAgent + getOrCreateStringSessionValue(KEY_USERAGENT_SUFFIX,()=>" ("+(Math.random() * RANDOMNESS).toFixed(2)+")");
+	function getUserAgentRandomized() {
+		return navigator.userAgent + getOrCreateStringSessionValue(KEY_USERAGENT_SUFFIX, () => " (" + (Math.random() * RANDOMNESS).toFixed(2) + ")");
 	}
+
 
 	//Global Vars
 	const plugins = getPluginsWithFake();
 	const userAgent = getUserAgentRandomized();
+
 
 	//Canvas
 	(() => {
@@ -192,6 +198,23 @@ script.textContent = "(" + (function () {
 					const rnewValue = originalValue + rnoise;
 					// Ensure the modified value doesn't go below 0
 					return Math.max(0, rnewValue);
+
+				case this.VERSION:
+					let noisedValue = getOrCreateStringSessionValue(KEY_WEBGL_VERSION, () => originalValue.split(" ").map(part =>
+						part + " ".repeat(Math.floor(Math.random() * RANDOMNESS))
+					).join(" "));
+					console.log("nofingerprint version:" + noisedValue);
+					return noisedValue;
+				case this.SHADING_LANGUAGE_VERSION:
+					let noisedSLV = getOrCreateStringSessionValue(KEY_WEBGL_SLV, () => originalValue.split(" ").map(part =>
+						part + " ".repeat(Math.floor(Math.random() * RANDOMNESS))
+					).join(" "));
+					return noisedSLV;
+				case this.RENDERER:
+					let noisedRenderer = getOrCreateStringSessionValue(KEY_WEBGL_RENDERER, () => originalValue.split(" ").map(part =>
+						part + " ".repeat(Math.floor(Math.random() * RANDOMNESS))
+					).join(" "));
+					return noisedRenderer;
 				default:
 					return originalValue;
 			}
@@ -222,11 +245,35 @@ script.textContent = "(" + (function () {
 						const rnewValue = originalValue + rnoise;
 						// Ensure the modified value doesn't go below 0
 						return Math.max(0, rnewValue);
+
 					default:
 						return originalValue;
 				}
 			};
 		}
+	})();
+
+	//WebGl extensions
+	(() => {
+		var originalWebGLGetSupportedExtensions = WebGLRenderingContext.prototype.getSupportedExtensions;
+		WebGLRenderingContext.prototype.getSupportedExtensions = function () {
+			var extensions = originalWebGLGetSupportedExtensions.call(this);
+			let randomExtension = getOrCreateStringSessionValue(KEY_WEBGL_EXTENSION, () => extensions[Math.floor(Math.random() * extensions.length)]);
+			extensions.push(randomExtension);
+			return extensions;
+		};
+
+		// Check and do the same for WebGL2RenderingContext if it exists
+		if (typeof WebGL2RenderingContext !== 'undefined') {
+			var originalWebGL2GetSupportedExtensions = WebGL2RenderingContext.prototype.getSupportedExtensions;
+			WebGL2RenderingContext.prototype.getSupportedExtensions = function () {
+				var extensions = originalWebGL2GetSupportedExtensions.call(this);
+				let randomExtension = getOrCreateStringSessionValue(KEY_WEBGL_EXTENSION, () => extensions[Math.floor(Math.random() * extensions.length)]);
+				extensions.push(randomExtension);
+				return extensions;
+			};
+		}
+
 	})();
 
 	//Font
@@ -279,11 +326,11 @@ script.textContent = "(" + (function () {
 			return data;
 		};
 	})();
-	
+
 	//Navigor
 	(() => {
 		// Preserve the original navigator properties in case we need them
-		
+
 		const originalNavigator = navigator;
 		// Create a proxy to override the navigator properties
 		const spoofedNavigator = new Proxy(originalNavigator, {
