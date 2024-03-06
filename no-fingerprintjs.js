@@ -2,8 +2,8 @@
 //@script-version: 1.0
 
 //uncomment for extension
-//let script = document.createElement("script");
-//script.textContent = "(" + (function () {
+// let script = document.createElement("script");
+// script.textContent = "(" + (function () {
 
 "use strict";
 const KEY_CANVAS_HEIGHT = "canvasHeight";
@@ -25,11 +25,11 @@ const KEY_FONT_OFFSET_WIDTH = "fontOffsetWidth";
 const KEY_AUDIO_TIME_OFFSET = "audioOffset";
 const KEY_PLUGIN_INDEX = "pluginIndex";
 const KEY_PLUGIN_NAME = "pluginName";
-const KEY_USERAGENT_SUFFIX = "userAgentSuffix";
+const KEY_USERAGENT_SEG_INDEX = "userAgentSegIndex";
 
 
 const RANDOMNESS = 2;
-const useSessionStorage = false;
+const useSessionStorage = true;
 
 //Helper functions
 function randomFloat(min, max) {
@@ -115,6 +115,17 @@ function randomCaseChangeInFirstSegment(str, key) {
 	const restOfTheString = str.substring(firstSegment.length);
 	return firstSegment + restOfTheString;
 }
+function randomCaseChangeAnySegment(str,key) {
+    const segments = str.split(' ');
+    const randomIndex = getOrCreateIntSessionValue(key,()=>Math.floor(Math.random() * segments.length));
+    if (Math.random() < 0.5) {
+        segments[randomIndex] = segments[randomIndex].toLowerCase();
+    } else {
+        segments[randomIndex] = segments[randomIndex].toUpperCase();
+    }
+    return segments.join(' ');
+}
+
 function getPluginsWithFake() {
 	var pluginsArray = [];
 	if (navigator.userAgent.toLowerCase().indexOf("android") !== -1) {
@@ -141,7 +152,8 @@ function getPluginsWithFake() {
 	return pluginsArray;
 }
 function getUserAgentRandomized() {
-	return navigator.userAgent + getOrCreateStringSessionValue(KEY_USERAGENT_SUFFIX, () => " (" + (Math.random() * RANDOMNESS).toFixed(2) + ")");
+	//return navigator.userAgent + getOrCreateStringSessionValue(KEY_USERAGENT_SUFFIX, () => " (" + (Math.random() * RANDOMNESS).toFixed(2) + ")");
+	return randomCaseChangeAnySegment(navigator.userAgent,KEY_USERAGENT_SEG_INDEX);
 }
 
 //Global Vars
@@ -306,7 +318,7 @@ const userAgent = getUserAgentRandomized();
 
 })();
 //Font
-/*(() => {
+(() => {
 	const originalOffsetWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetWidth');
 	const originalOffsetHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetHeight');
 	
@@ -321,7 +333,7 @@ const userAgent = getUserAgentRandomized();
 			return addNoise(originalOffsetHeight.get.call(this),KEY_FONT_OFFSET_HEIGHT);
 		}
 	});
-})();*/
+})();
 
 //Audio
 (() => {
@@ -385,5 +397,5 @@ const userAgent = getUserAgentRandomized();
 })();
 
 //uncomment for extension
-//}) + ")()";
-//document.documentElement.prepend(script);
+// }) + ")()";
+// document.documentElement.prepend(script);
