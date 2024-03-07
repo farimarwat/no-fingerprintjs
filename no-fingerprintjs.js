@@ -2,8 +2,8 @@
 //@script-version: 1.0
 
 //uncomment for extension
-// let script = document.createElement("script");
-// script.textContent = "(" + (function () {
+let script = document.createElement("script");
+script.textContent = "(" + (function () {
 
 	"use strict";
 	const KEY_CANVAS_HEIGHT = "canvasHeight";
@@ -264,9 +264,9 @@
 				case this.SHADING_LANGUAGE_VERSION:
 					let noisedSLV = randomCaseChangeInFirstSegment(originalValue, KEY_WEBGL_SLV);
 					return noisedSLV;
-				case this.RENDERER:
-					let noisedRenderer = randomCaseChangeAnySegment(originalValue, KEY_WEBGL_RENDERER);
-					return noisedRenderer;
+				// case this.RENDERER:
+				// 	let noisedRenderer = randomCaseChangeAnySegment(originalValue, KEY_WEBGL_RENDERER);
+				// 	return noisedRenderer;
 				default:
 					return originalValue;
 			}
@@ -302,9 +302,9 @@
 					case this.SHADING_LANGUAGE_VERSION:
 						let noisedSLV = randomCaseChangeInFirstSegment(originalValue, KEY_WEBGL_SLV);
 						return noisedSLV;
-					case this.RENDERER:
-						let noisedRenderer = randomCaseChangeAnySegment(originalValue, KEY_WEBGL_RENDERER);
-						return noisedRenderer;
+					// case this.RENDERER:
+					// 	let noisedRenderer = randomCaseChangeAnySegment(originalValue, KEY_WEBGL_RENDERER);
+					// 	return noisedRenderer;
 					default:
 						return originalValue;
 				}
@@ -423,5 +423,5 @@
 	})();
 
 	//uncomment for extension
-// }) + ")()";
-// document.documentElement.prepend(script);
+}) + ")()";
+document.documentElement.prepend(script);
