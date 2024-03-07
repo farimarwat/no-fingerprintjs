@@ -32,7 +32,7 @@
 	const KEY_SCREEN_HEIGHT = "screenHeight";
 
 	const RANDOMNESS = 2;
-	const useSessionStorage = true;
+	const useSessionStorage = false;
 
 
 	//Helper functions
@@ -236,37 +236,63 @@
 
 	//WebGl params
 	(() => {
-		function overrideGetParameter(contextPrototype, originalGetParameter) {
-			contextPrototype.getParameter = function(parameter) {
-				const originalValue = originalGetParameter.call(this, parameter);
+		const originalGetParameter = WebGLRenderingContext.prototype.getParameter;
+		WebGLRenderingContext.prototype.getParameter = function (parameter) {
+			const originalValue = originalGetParameter.call(this, parameter);
+			switch (parameter) {
+				case this.BLUE_BITS:
+					const bnoise = getOrCreateFloatSessionValue(KEY_WEBGL_BIT_BLUE, () => Math.floor(Math.random() * RANDOMNESS));
+					const bnewValue = originalValue + bnoise;
+					// Ensure the modified value doesn't go below 0
+					return Math.max(0, bnewValue);
+				case this.GREEN_BITS:
+					const gnoise = getOrCreateFloatSessionValue(KEY_WEBGL_BIT_GREEN, () => Math.floor(Math.random() * RANDOMNESS));
+					const gnewValue = originalValue + gnoise;
+					// Ensure the modified value doesn't go below 0
+					return Math.max(0, gnewValue);
+
+				case this.VERSION:
+					let noisedVersion = randomCaseChangeInFirstSegment(originalValue, KEY_WEBGL_VERSION);
+					return noisedVersion;
+				case this.VENDOR:
+					let noisedVendor = randomCaseChangeInFirstSegment(originalValue, KEY_WEBGL_VENDOR);
+					return noisedVendor;
+				case this.SHADING_LANGUAGE_VERSION:
+					let noisedSLV = randomCaseChangeInFirstSegment(originalValue, KEY_WEBGL_SLV);
+					return noisedSLV;
+				// case this.RENDERER:
+				// 	let noisedRenderer = randomCaseChangeAnySegment(originalValue, KEY_WEBGL_RENDERER);
+				// 	return noisedRenderer;
+				default:
+					return originalValue;
+			}
+		};
+
+		// Repeat for WebGL2RenderingContext if your application uses WebGL 2
+		if (typeof WebGL2RenderingContext !== 'undefined') {
+			const originalGetParameterWebGL2 = WebGL2RenderingContext.prototype.getParameter;
+			WebGL2RenderingContext.prototype.getParameter = function (parameter) {
+				const originalValue = originalGetParameterWebGL2.call(this, parameter);
 				switch (parameter) {
 					case this.VERSION:
-						return randomCaseChangeInFirstSegment(originalValue, KEY_WEBGL_VERSION);
+						let noisedVersion = randomCaseChangeInFirstSegment(originalValue, KEY_WEBGL_VERSION);
+						return noisedVersion;
 					case this.VENDOR:
-						return randomCaseChangeInFirstSegment(originalValue, KEY_WEBGL_VENDOR);
+						let noisedVendor = randomCaseChangeInFirstSegment(originalValue, KEY_WEBGL_VENDOR);
+						return noisedVendor;
 					case this.SHADING_LANGUAGE_VERSION:
-						return randomCaseChangeInFirstSegment(originalValue, KEY_WEBGL_SLV);
+						let noisedSLV = randomCaseChangeInFirstSegment(originalValue, KEY_WEBGL_SLV);
+						return noisedSLV;
 					// case this.RENDERER:
-					//     return randomCaseChangeAnySegment(originalValue, KEY_WEBGL_RENDERER);
+					// 	let noisedRenderer = randomCaseChangeAnySegment(originalValue, KEY_WEBGL_RENDERER);
+					// 	return noisedRenderer;
 					default:
 						return originalValue;
 				}
 			};
 		}
-	
-		// Apply the same modification logic to WebGLRenderingContext
-		if (typeof WebGLRenderingContext !== 'undefined') {
-			const originalGetParameter = WebGLRenderingContext.prototype.getParameter;
-			overrideGetParameter(WebGLRenderingContext.prototype, originalGetParameter);
-		}
-	
-		// Repeat for WebGL2RenderingContext if your application uses WebGL 2
-		if (typeof WebGL2RenderingContext !== 'undefined') {
-			const originalGetParameterWebGL2 = WebGL2RenderingContext.prototype.getParameter;
-			overrideGetParameter(WebGL2RenderingContext.prototype, originalGetParameterWebGL2);
-		}
 	})();
-	
+
 
 	//WebGl extensions
 	(() => {
