@@ -32,7 +32,7 @@
 	const KEY_SCREEN_HEIGHT = "screenHeight";
 
 	const RANDOMNESS = 2;
-	const useSessionStorage = false;
+	const useSessionStorage = true;
 
 
 	//Helper functions
@@ -240,7 +240,21 @@
 		WebGLRenderingContext.prototype.getParameter = function (parameter) {
 			const originalValue = originalGetParameter.call(this, parameter);
 			switch (parameter) {
-				
+				case this.BLUE_BITS:
+					const bnoise = getOrCreateFloatSessionValue(KEY_WEBGL_BIT_BLUE, () => Math.floor(Math.random() * RANDOMNESS));
+					const bnewValue = originalValue + bnoise;
+					// Ensure the modified value doesn't go below 0
+					return Math.max(0, bnewValue);
+				case this.GREEN_BITS:
+					const gnoise = getOrCreateFloatSessionValue(KEY_WEBGL_BIT_GREEN, () => Math.floor(Math.random() * RANDOMNESS));
+					const gnewValue = originalValue + gnoise;
+					// Ensure the modified value doesn't go below 0
+					return Math.max(0, gnewValue);
+				case this.RED_BITS:
+					const rnoise = getOrCreateFloatSessionValue(KEY_WEBGL_BIT_RED, () => Math.floor(Math.random() * RANDOMNESS));
+					const rnewValue = originalValue + rnoise;
+					// Ensure the modified value doesn't go below 0
+					return Math.max(0, rnewValue);
 				case this.VERSION:
 					let noisedVersion = randomCaseChangeInFirstSegment(originalValue, KEY_WEBGL_VERSION);
 					return noisedVersion;
@@ -264,6 +278,21 @@
 			WebGL2RenderingContext.prototype.getParameter = function (parameter) {
 				const originalValue = originalGetParameterWebGL2.call(this, parameter);
 				switch (parameter) {
+					case this.BLUE_BITS:
+						const bnoise = getOrCreateFloatSessionValue(KEY_WEBGL_BIT_BLUE, () => Math.floor(Math.random() * RANDOMNESS));
+						const bnewValue = originalValue + bnoise;
+						// Ensure the modified value doesn't go below 0
+						return Math.max(0, bnewValue);
+					case this.GREEN_BITS:
+						const gnoise = getOrCreateFloatSessionValue(KEY_WEBGL_BIT_GREEN, () => Math.floor(Math.random() * RANDOMNESS));
+						const gnewValue = originalValue + gnoise;
+						// Ensure the modified value doesn't go below 0
+						return Math.max(0, gnewValue);
+					case this.RED_BITS:
+						const rnoise = getOrCreateFloatSessionValue(KEY_WEBGL_BIT_RED, () => Math.floor(Math.random() * RANDOMNESS));
+						const rnewValue = originalValue + rnoise;
+						// Ensure the modified value doesn't go below 0
+						return Math.max(0, rnewValue);
 					case this.VERSION:
 						let noisedVersion = randomCaseChangeInFirstSegment(originalValue, KEY_WEBGL_VERSION);
 						return noisedVersion;
@@ -394,5 +423,5 @@
 	})();
 
 	//uncomment for extension
-// }) + ")()";
-// document.documentElement.prepend(script);
+}) + ")()";
+document.documentElement.prepend(script);
