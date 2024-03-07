@@ -1,9 +1,10 @@
 //@script-name: no-fingerprintjs
 //@script-version: 1.0
 
+//uncomment for extension
+// let script = document.createElement("script");
+// script.textContent = "(" + (function () {
 
-let script = document.createElement("script");
-script.textContent = "(" + (function () {
 	"use strict";
 	const KEY_CANVAS_HEIGHT = "canvasHeight";
 	const KEY_CANVAS_WIDTH = "canvasWidth";
@@ -13,6 +14,11 @@ script.textContent = "(" + (function () {
 	const KEY_WEBGL_BIT_BLUE = "webglBitBlue";
 	const KEY_WEBGL_BIT_GREEN = "webglBitGreen";
 	const KEY_WEBGL_BIT_RED = "webglBitRED";
+	const KEY_WEBGL_EXTENSION = "webglExtension";
+	const KEY_WEBGL_VERSION = "webglVersion";
+	const KEY_WEBGL_SLV = "webglShadedLanguageVersion";
+	const KEY_WEBGL_RENDERER = "webglRenderer";
+	const KEY_WEBGL_VENDOR = "webglVendor";
 
 
 	const KEY_FONT_OFFSET_HEIGHT = "fontOffsetHeight";
@@ -20,10 +26,14 @@ script.textContent = "(" + (function () {
 	const KEY_AUDIO_TIME_OFFSET = "audioOffset";
 	const KEY_PLUGIN_INDEX = "pluginIndex";
 	const KEY_PLUGIN_NAME = "pluginName";
-	const KEY_USERAGENT_SUFFIX = "userAgentSuffix";
+	const KEY_USERAGENT_SEG_INDEX = "userAgentSegIndex";
+	const KEY_HARDWARE_CONCURRENCY = "hardwareConcurrency";
+	const KEY_SCREEN_WIDTH = "screenWidth";
+	const KEY_SCREEN_HEIGHT = "screenHeight";
 
 	const RANDOMNESS = 2;
 	const useSessionStorage = true;
+
 
 	//Helper functions
 	function randomFloat(min, max) {
@@ -47,6 +57,19 @@ script.textContent = "(" + (function () {
 		}
 		return parseFloat(value);
 	}
+	function getOrCreateIntSessionValue(key, generator) {
+		if (!useSessionStorage) {
+			return generator();
+		}
+		const sessionKey = key;
+		let value = sessionStorage.getItem(sessionKey);
+		if (value === null) {
+			value = generator();
+			sessionStorage.setItem(sessionKey, value.toString());
+		}
+		return Number(value);
+	}
+
 	function getOrCreateStringSessionValue(key, generator) {
 		if (!useSessionStorage) {
 			return generator();
@@ -60,21 +83,53 @@ script.textContent = "(" + (function () {
 		}
 		return value;
 	}
-	function generateFakePlugins(){
+	function generateFakePlugins() {
 		const pluginsArray = [];
 		for (let i = 0; i < 10; i++) {
-            pluginsArray.push({
-                name: `Fake Plugin ${i+1}`,
-                description: `Fake Plugin Description ${i+1}`,
-                filename: `fakeplugin${i+1}.dll`,
-                length: 0,
-                item: function(index) { return this[index]; },
-                namedItem: function(name) { return this[name]; }
-            });
-        }
+			pluginsArray.push({
+				name: `Fake Plugin ${i + 1}`,
+				description: `Fake Plugin Description ${i + 1}`,
+				filename: `fakeplugin${i + 1}.dll`,
+				length: 0,
+				item: function (index) { return this[index]; },
+				namedItem: function (name) { return this[name]; }
+			});
+		}
 		return pluginsArray;
 	}
-	
+	function randomCaseChangeInFirstSegment(str, key) {
+		let firstSegment = str.split(' ')[0];
+		if (/[a-zA-Z]/.test(firstSegment)) {
+			const charPositions = [];
+			for (let i = 0; i < firstSegment.length; i++) {
+				if (/[a-zA-Z]/.test(firstSegment[i])) {
+					charPositions.push(i);
+				}
+			}
+
+			const randomPos = getOrCreateIntSessionValue(key, () => charPositions[Math.floor(Math.random() * charPositions.length)]);
+			const char = firstSegment[randomPos];
+			if (char === char.toUpperCase()) {
+				firstSegment = firstSegment.substring(0, randomPos) + char.toLowerCase() + firstSegment.substring(randomPos + 1);
+			} else {
+				firstSegment = firstSegment.substring(0, randomPos) + char.toUpperCase() + firstSegment.substring(randomPos + 1);
+			}
+		}
+
+		const restOfTheString = str.substring(firstSegment.length);
+		return firstSegment + restOfTheString;
+	}
+	function randomCaseChangeAnySegment(str, key) {
+		const segments = str.split(' ');
+		const randomIndex = getOrCreateIntSessionValue(key, () => Math.floor(Math.random() * segments.length));
+		if (Math.random() < 0.5) {
+			segments[randomIndex] = segments[randomIndex].toLowerCase();
+		} else {
+			segments[randomIndex] = segments[randomIndex].toUpperCase();
+		}
+		return segments.join(' ');
+	}
+
 	function getPluginsWithFake() {
 		var pluginsArray = [];
 		if (navigator.userAgent.toLowerCase().indexOf("android") !== -1) {
@@ -100,16 +155,54 @@ script.textContent = "(" + (function () {
 		pluginsArray.push(fakePlugin);
 		return pluginsArray;
 	}
-	function getUserAgentRandomized(){
-		return navigator.userAgent + getOrCreateStringSessionValue(KEY_USERAGENT_SUFFIX,()=>" ("+(Math.random() * RANDOMNESS).toFixed(2)+")");
+	function getUserAgentRandomized() {
+		//return navigator.userAgent + getOrCreateStringSessionValue(KEY_USERAGENT_SUFFIX, () => " (" + (Math.random() * RANDOMNESS).toFixed(2) + ")");
+		return randomCaseChangeAnySegment(navigator.userAgent, KEY_USERAGENT_SEG_INDEX);
 	}
+	function getHardwareConcurrencyRandomized() {
+		return getOrCreateIntSessionValue(KEY_HARDWARE_CONCURRENCY, () => {
+			let baseConcurrency = navigator.hardwareConcurrency;
+			let adjustmentValue = Math.floor(Math.random() * RANDOMNESS) + 1;
+			let shouldIncrement = baseConcurrency === 2 || Math.random() < 0.5;
+
+			if (!shouldIncrement && adjustmentValue >= baseConcurrency) {
+				adjustmentValue = baseConcurrency - 1;
+			}
+			let adjustment = shouldIncrement ? adjustmentValue : -adjustmentValue;
+			let randomizedConcurrency = Math.max(1, baseConcurrency + adjustment);
+			return randomizedConcurrency;
+		});
+	}
+	function getScreenSize() {
+		let w = screen.width;
+		let h = screen.height;
+		w = Math.floor(addNoise(w, KEY_SCREEN_WIDTH));
+		h = Math.floor(addNoise(h, KEY_SCREEN_HEIGHT));
+		return {
+			width: w,
+			height: h
+		}
+	}
+	function setValue(object, propertyName, value, writable) {
+		if (!writable) {
+			writable = false;
+		}
+		Object.defineProperty(object, propertyName, {
+			value: value,
+			writable: writable,
+			enumerable: true
+		});
+	};
 
 	//Global Vars
-	const plugins = getPluginsWithFake();
-	const userAgent = getUserAgentRandomized();
+	const pluginsRandomized = getPluginsWithFake();
+	const userAgentRandomized = getUserAgentRandomized();
+	const hardwareConcurrencyRandomized = getHardwareConcurrencyRandomized();
+	const screenRandomized = getScreenSize();
 
 	//Canvas
 	(() => {
+
 		// Spoofing canvas size
 		const originalGetContext = HTMLCanvasElement.prototype.getContext;
 		HTMLCanvasElement.prototype.getContext = function (type, contextAttributes) {
@@ -141,36 +234,6 @@ script.textContent = "(" + (function () {
 		};
 	})();
 
-	//WebGl Clear Color
-	/*(()=> {
-		const originalWebGLClearColor = WebGLRenderingContext.prototype.clearColor;
-		WebGLRenderingContext.prototype.clearColor = function(r, g, b, a) {
-			// Add a small amount of noise to each color channel
-			const noiseIntensity = 0.01; // Adjust the intensity of the noise here
-			const newR = getOrCreateSessionValue(KEY_WEBGL_COLOR_R,()=>Math.min(Math.max(0, r + (Math.random() * noiseIntensity - noiseIntensity / 2)), 1));
-			const newG = getOrCreateSessionValue(KEY_WEBGL_COLOR_G,()=> Math.min(Math.max(0, g + (Math.random() * noiseIntensity - noiseIntensity / 2)), 1));
-			const newB = getOrCreateSessionValue(KEY_WEBGL_COLOR_B,()=>Math.min(Math.max(0, b + (Math.random() * noiseIntensity - noiseIntensity / 2)), 1));
-			console.log("WebGl Spoofing: "+"newRed: "+newR+" newG: "+newG+" newB: "+newB)
-			// Call the original clearColor function with the modified values
-			return originalWebGLClearColor.call(this, newR, newG, newB, a);
-		};
-	
-		// Repeat for WebGL2RenderingContext if your application uses WebGL 2
-		if (typeof WebGL2RenderingContext !== 'undefined') {
-			const originalWebGL2ClearColor = WebGL2RenderingContext.prototype.clearColor;
-			WebGL2RenderingContext.prototype.clearColor = function(r, g, b, a) {
-				const noiseIntensity = 0.01; // Adjust the intensity of the noise here
-				const newR = Math.min(Math.max(0, r + (Math.random() * noiseIntensity - noiseIntensity / 2)), 1);
-				const newG = Math.min(Math.max(0, g + (Math.random() * noiseIntensity - noiseIntensity / 2)), 1);
-				const newB = Math.min(Math.max(0, b + (Math.random() * noiseIntensity - noiseIntensity / 2)), 1);
-				console.log("WebGl2 Spoofing: "+"newRed: "+newR+" newG: "+newG+" newB: "+newB)
-
-				return originalWebGL2ClearColor.call(this, newR, newG, newB, a);
-			};
-		}
-	})();*/
-
-
 	//WebGl params
 	(() => {
 		const originalGetParameter = WebGLRenderingContext.prototype.getParameter;
@@ -192,13 +255,21 @@ script.textContent = "(" + (function () {
 					const rnewValue = originalValue + rnoise;
 					// Ensure the modified value doesn't go below 0
 					return Math.max(0, rnewValue);
+				case this.VERSION:
+					let noisedVersion = randomCaseChangeInFirstSegment(originalValue, KEY_WEBGL_VERSION);
+					return noisedVersion;
+				case this.VENDOR:
+					let noisedVendor = randomCaseChangeInFirstSegment(originalValue, KEY_WEBGL_VENDOR);
+					return noisedVendor;
+				case this.SHADING_LANGUAGE_VERSION:
+					let noisedSLV = randomCaseChangeInFirstSegment(originalValue, KEY_WEBGL_SLV);
+					return noisedSLV;
+				// case this.RENDERER:
+				// 	let noisedRenderer = randomCaseChangeAnySegment(originalValue, KEY_WEBGL_RENDERER);
+				// 	return noisedRenderer;
 				default:
 					return originalValue;
 			}
-
-
-			// For all other parameters, return the original value
-			return originalGetParameter.call(this, parameter);
 		};
 
 		// Repeat for WebGL2RenderingContext if your application uses WebGL 2
@@ -222,6 +293,18 @@ script.textContent = "(" + (function () {
 						const rnewValue = originalValue + rnoise;
 						// Ensure the modified value doesn't go below 0
 						return Math.max(0, rnewValue);
+					case this.VERSION:
+						let noisedVersion = randomCaseChangeInFirstSegment(originalValue, KEY_WEBGL_VERSION);
+						return noisedVersion;
+					case this.VENDOR:
+						let noisedVendor = randomCaseChangeInFirstSegment(originalValue, KEY_WEBGL_VENDOR);
+						return noisedVendor;
+					case this.SHADING_LANGUAGE_VERSION:
+						let noisedSLV = randomCaseChangeInFirstSegment(originalValue, KEY_WEBGL_SLV);
+						return noisedSLV;
+					// case this.RENDERER:
+					// 	let noisedRenderer = randomCaseChangeAnySegment(originalValue, KEY_WEBGL_RENDERER);
+					// 	return noisedRenderer;
 					default:
 						return originalValue;
 				}
@@ -229,23 +312,44 @@ script.textContent = "(" + (function () {
 		}
 	})();
 
+	//WebGl extensions
+	(() => {
+		var originalWebGLGetSupportedExtensions = WebGLRenderingContext.prototype.getSupportedExtensions;
+		WebGLRenderingContext.prototype.getSupportedExtensions = function () {
+			var extensions = originalWebGLGetSupportedExtensions.call(this);
+			let randomExtension = getOrCreateStringSessionValue(KEY_WEBGL_EXTENSION, () => extensions[Math.floor(Math.random() * extensions.length)]);
+			extensions.push(randomExtension);
+			return extensions
+		};
+		// Check and do the same for WebGL2RenderingContext if it exists
+		if (typeof WebGL2RenderingContext !== 'undefined') {
+			var originalWebGL2GetSupportedExtensions = WebGL2RenderingContext.prototype.getSupportedExtensions;
+			WebGL2RenderingContext.prototype.getSupportedExtensions = function () {
+				var extensions = originalWebGL2GetSupportedExtensions.call(this);
+				let randomExtension = getOrCreateStringSessionValue(KEY_WEBGL_EXTENSION, () => extensions[Math.floor(Math.random() * extensions.length)]);
+				extensions.push(randomExtension);
+				return extensions
+			};
+		}
+
+	})();
 	//Font
-	/*(() => {
+	(() => {
 		const originalOffsetWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetWidth');
 		const originalOffsetHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetHeight');
 
 		Object.defineProperty(HTMLElement.prototype, 'offsetWidth', {
 			get() {
-				return addNoise(originalOffsetWidth.get.call(this),KEY_FONT_OFFSET_WIDTH);
+				return addNoise(originalOffsetWidth.get.call(this), KEY_FONT_OFFSET_WIDTH);
 			}
 		});
 
 		Object.defineProperty(HTMLElement.prototype, 'offsetHeight', {
 			get() {
-				return addNoise(originalOffsetHeight.get.call(this),KEY_FONT_OFFSET_HEIGHT);
+				return addNoise(originalOffsetHeight.get.call(this), KEY_FONT_OFFSET_HEIGHT);
 			}
 		});
-	})();*/
+	})();
 
 	//Audio
 	(() => {
@@ -271,7 +375,6 @@ script.textContent = "(" + (function () {
 
 		AudioBuffer.prototype.getChannelData = function (channel) {
 			const data = originalGetChannelData.apply(this, arguments);
-			const noiseKey = `audioNoise${channel}`;
 			const noiseValue = getOrCreateFloatSessionValue(KEY_AUDIO_TIME_OFFSET, () => (Math.random() - 0.5) * 2 * 1e-7);
 			for (let i = 0; i < data.length; i++) {
 				data[i] += noiseValue;
@@ -279,20 +382,22 @@ script.textContent = "(" + (function () {
 			return data;
 		};
 	})();
-	
-	//Navigor
+
+	//Navigator
 	(() => {
 		// Preserve the original navigator properties in case we need them
-		
+
 		const originalNavigator = navigator;
 		// Create a proxy to override the navigator properties
 		const spoofedNavigator = new Proxy(originalNavigator, {
 			get(target, prop) {
 				switch (prop) {
 					case 'plugins':
-						return plugins;
+						return pluginsRandomized;
 					case 'userAgent':
-						return userAgent;
+						return userAgentRandomized;
+					case 'hardwareConcurrency':
+						return hardwareConcurrencyRandomized;
 					default:
 						// Return the original property for everything else
 						return target[prop];
@@ -308,6 +413,15 @@ script.textContent = "(" + (function () {
 		}
 	})();
 
+	//Screen
+	(() => {
+		let screenSize = [screenRandomized.width, screenRandomized.height];
+		screen.availWidth && setValue(screen, "availWidth", screenSize[0]);
+		screen.availHeight && setValue(screen, "availHeight", screenSize[1]);
+		screen.width && setValue(screen, "width", screenSize[0]);
+		screen.height && setValue(screen, "height", screenSize[1]);
+	})();
 
-}) + ")()";
-document.documentElement.prepend(script);
+	//uncomment for extension
+// }) + ")()";
+// document.documentElement.prepend(script);
