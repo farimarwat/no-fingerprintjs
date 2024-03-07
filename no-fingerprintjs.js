@@ -423,5 +423,5 @@
 	})();
 
 	//uncomment for extension
-}) + ")()";
-document.documentElement.prepend(script);
+// }) + ")()";
+// document.documentElement.prepend(script);
