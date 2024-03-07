@@ -2,8 +2,8 @@
 //@script-version: 1.0
 
 //uncomment for extension
-let script = document.createElement("script");
-script.textContent = "(" + (function () {
+// let script = document.createElement("script");
+// script.textContent = "(" + (function () {
 
 	"use strict";
 	const KEY_CANVAS_HEIGHT = "canvasHeight";
@@ -423,5 +423,5 @@ script.textContent = "(" + (function () {
 	})();
 
 	//uncomment for extension
-}) + ")()";
-document.documentElement.prepend(script);
+// }) + ")()";
+// document.documentElement.prepend(script);
