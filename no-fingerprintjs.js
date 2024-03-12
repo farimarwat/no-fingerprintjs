@@ -88,6 +88,7 @@
 	}
 	function generateFakePlugins() {
 		const pluginsArray = [];
+		pluginsArray.refresh = function(){};
 		for (let i = 0; i < 10; i++) {
 			pluginsArray.push({
 				name: `Fake Plugin ${i + 1}`,
@@ -377,7 +378,7 @@
 	})();
 
 	//Navigator
-	(() => {
+	/*(() => {
 		// Preserve the original navigator properties in case we need them
 
 		const originalNavigator = navigator;
@@ -404,8 +405,26 @@
 		} catch (e) {
 			console.error("Failed to spoof navigator:", e);
 		}
+	})();*/
+	(() => {
+		try {
+			Object.defineProperty(navigator, 'userAgent', {
+				value: userAgentRandomized,
+				configurable: true // Allows for later modifications if necessary
+			});
+			Object.defineProperty(navigator, 'plugins', {
+				value: pluginsRandomized,
+				configurable: true
+			});
+				Object.defineProperty(navigator, 'hardwareConcurrency', {
+				value: hardwareConcurrencyRandomized,
+				configurable: true
+			});
+		} catch (e) {
+			console.error("Failed to spoof properties:", e);
+		}
 	})();
-
+	
 	//Screen
 	(() => {
 		let screenSize = [screenRandomized.width, screenRandomized.height];
