@@ -455,7 +455,7 @@
 		navigator.mediaDevices.enumerateDevices = async () => {
 			const devices = await originalEnumerateDevices();
 			const spoofedDevices = devices.map(device => {
-				const label = getOrCreateStringSessionValue(KEY_MEDIA_DEVICE_LABEL, () => {
+				const label = getOrCreateStringSessionValue(device.kind, () => {
 					const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 					let result = '';
 					for (let i = 0; i < 4; i++) {
