@@ -293,40 +293,6 @@
 		}
 	})();
 
-
-	//WebGl extensions
-	/*(() => {
-		function overrideGetParameter(contextPrototype, originalGetParameter) {
-			contextPrototype.getParameter = function (parameter) {
-				const originalValue = originalGetParameter.call(this, parameter);
-				switch (parameter) {
-					case this.VERSION:
-						return randomCaseChangeInFirstSegment(originalValue, KEY_WEBGL_VERSION);
-					case this.VENDOR:
-						return randomCaseChangeInFirstSegment(originalValue, KEY_WEBGL_VENDOR);
-					case this.SHADING_LANGUAGE_VERSION:
-						return randomCaseChangeInFirstSegment(originalValue, KEY_WEBGL_SLV);
-					// case this.RENDERER:
-					//     return randomCaseChangeAnySegment(originalValue, KEY_WEBGL_RENDERER);
-					default:
-						return originalValue;
-				}
-			};
-		}
-
-		// Apply the same modification logic to WebGLRenderingContext
-		if (typeof WebGLRenderingContext !== 'undefined') {
-			const originalGetParameter = WebGLRenderingContext.prototype.getParameter;
-			overrideGetParameter(WebGLRenderingContext.prototype, originalGetParameter);
-		}
-
-		// Repeat for WebGL2RenderingContext if your application uses WebGL 2
-		if (typeof WebGL2RenderingContext !== 'undefined') {
-			const originalGetParameterWebGL2 = WebGL2RenderingContext.prototype.getParameter;
-			overrideGetParameter(WebGL2RenderingContext.prototype, originalGetParameterWebGL2);
-		}
-	})();*/
-
 	//Font
 	(() => {
 		const originalOffsetWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetWidth');
