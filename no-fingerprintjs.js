@@ -11,10 +11,7 @@
 	const KEY_CANVAS_TEXT_X = "canvasTextX";
 	const KEY_CANVAS_TEXT_Y = "canvasTextY";
 	const KEY_CANVAS_FONT_SIZE = "canvasFontSize";
-	const KEY_WEBGL_BIT_BLUE = "webglBitBlue";
-	const KEY_WEBGL_BIT_GREEN = "webglBitGreen";
-	const KEY_WEBGL_BIT_RED = "webglBitRED";
-	const KEY_WEBGL_EXTENSION = "webglExtension";
+	
 	const KEY_WEBGL_VERSION = "webglVersion";
 	const KEY_WEBGL_SLV = "webglShadedLanguageVersion";
 	const KEY_WEBGL_RENDERER = "webglRenderer";
@@ -32,11 +29,11 @@
 	const KEY_SCREEN_HEIGHT = "screenHeight";
 	const KEY_TIMEZONE = "timezone";
 	const KEY_TIMEZONE_OFFSET = "timezoneoffset";
-
-	const KEY_MEDIA_DEVICE_LABEL = "mediaDeviceLabel";
+	const KEY_UNMASKED_VENDOR_WEBGL = "unmaskedVendorWebgl";
+	const KEY_UNMASKED_RENDERER_WEBGL = "unmaskedRendererWebgl";
 
 	const RANDOMNESS = 2;
-	const useSessionStorage = true;
+	const useSessionStorage = false;
 
 
 	//Helper functions
@@ -88,7 +85,7 @@
 	}
 	function generateFakePlugins() {
 		const pluginsArray = [];
-		pluginsArray.refresh = function(){};
+		pluginsArray.refresh = function () { };
 		for (let i = 0; i < 10; i++) {
 			pluginsArray.push({
 				name: `Fake Plugin ${i + 1}`,
@@ -209,15 +206,33 @@
 	const screenRandomized = getScreenSize();
 	const timezoneRandomized = getRandomizedTimeZone();
 
+
 	//Canvas
 	(() => {
-
 		// Spoofing canvas size
 		const originalGetContext = HTMLCanvasElement.prototype.getContext;
 		HTMLCanvasElement.prototype.getContext = function (type, contextAttributes) {
 			this.width = addNoise(this.width, KEY_CANVAS_WIDTH);
 			this.height = addNoise(this.height, KEY_CANVAS_HEIGHT);
-			return originalGetContext.call(this, type, contextAttributes);
+			let context =  originalGetContext.call(this, type, contextAttributes);
+
+			// Check if the context is WebGL (or experimental WebGL) to apply the spoofing.
+			if (context && (type === 'webgl' || type === 'experimental-webgl' || type === 'webgl2')) {
+				const originalGetParameter = context.getParameter.bind(context);
+				context.getParameter = function(parameter) {
+					const debugInfo = this.getExtension('WEBGL_debug_renderer_info');
+					if (debugInfo && parameter === debugInfo.UNMASKED_VENDOR_WEBGL) {
+						let noisedVendor = randomCaseChangeInFirstSegment(originalGetParameter(debugInfo.UNMASKED_VENDOR_WEBGL),KEY_UNMASKED_VENDOR_WEBGL);
+						return noisedVendor;
+					} else if (debugInfo && parameter === debugInfo.UNMASKED_RENDERER_WEBGL) {
+						let noisedRenderer = randomCaseChangeInFirstSegment(originalGetParameter(debugInfo.UNMASKED_RENDERER_WEBGL),KEY_UNMASKED_RENDERER_WEBGL);
+						return noisedRenderer;
+					} 
+					return originalGetParameter(parameter);
+				};
+			}
+	
+			return context;
 		};
 
 		// Override fillText on the CanvasRenderingContext2D prototype
@@ -249,8 +264,6 @@
 		WebGLRenderingContext.prototype.getParameter = function (parameter) {
 			const originalValue = originalGetParameter.call(this, parameter);
 			switch (parameter) {
-
-
 				case this.VERSION:
 					let noisedVersion = randomCaseChangeInFirstSegment(originalValue, KEY_WEBGL_VERSION);
 					return noisedVersion;
@@ -348,13 +361,13 @@
 		try {
 			Object.defineProperty(navigator, 'userAgent', {
 				value: userAgentRandomized,
-				configurable: true 
+				configurable: true
 			});
 			Object.defineProperty(navigator, 'plugins', {
 				value: pluginsRandomized,
 				configurable: true
 			});
-				Object.defineProperty(navigator, 'hardwareConcurrency', {
+			Object.defineProperty(navigator, 'hardwareConcurrency', {
 				value: hardwareConcurrencyRandomized,
 				configurable: true
 			});
@@ -362,7 +375,7 @@
 			console.error("Failed to spoof properties:", e);
 		}
 	})();
-	
+
 	//Screen
 	(() => {
 		let screenSize = [screenRandomized.width, screenRandomized.height];
@@ -418,7 +431,7 @@
 					for (let i = 0; i < 4; i++) {
 						result += chars.charAt(Math.floor(Math.random() * chars.length));
 					}
-					return device.kind+" "+result;
+					return device.kind + " " + result;
 				});
 				return {
 					deviceId: device.deviceId,
