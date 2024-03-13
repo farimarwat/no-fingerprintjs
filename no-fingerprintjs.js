@@ -243,7 +243,7 @@
 		};
 	})();
 
-	//WebGl params
+	//WebGl 
 	(() => {
 		const originalGetParameter = WebGLRenderingContext.prototype.getParameter;
 		WebGLRenderingContext.prototype.getParameter = function (parameter) {
@@ -295,7 +295,7 @@
 
 
 	//WebGl extensions
-	(() => {
+	/*(() => {
 		function overrideGetParameter(contextPrototype, originalGetParameter) {
 			contextPrototype.getParameter = function (parameter) {
 				const originalValue = originalGetParameter.call(this, parameter);
@@ -325,7 +325,7 @@
 			const originalGetParameterWebGL2 = WebGL2RenderingContext.prototype.getParameter;
 			overrideGetParameter(WebGL2RenderingContext.prototype, originalGetParameterWebGL2);
 		}
-	})();
+	})();*/
 
 	//Font
 	(() => {
@@ -378,39 +378,11 @@
 	})();
 
 	//Navigator
-	/*(() => {
-		// Preserve the original navigator properties in case we need them
-
-		const originalNavigator = navigator;
-		// Create a proxy to override the navigator properties
-		const spoofedNavigator = new Proxy(originalNavigator, {
-			get(target, prop) {
-				switch (prop) {
-					case 'plugins':
-						return pluginsRandomized;
-					case 'userAgent':
-						return userAgentRandomized;
-					case 'hardwareConcurrency':
-						return hardwareConcurrencyRandomized;
-					default:
-						// Return the original property for everything else
-						return target[prop];
-				}
-			}
-		});
-		try {
-			Object.defineProperty(window, 'navigator', {
-				value: spoofedNavigator
-			});
-		} catch (e) {
-			console.error("Failed to spoof navigator:", e);
-		}
-	})();*/
 	(() => {
 		try {
 			Object.defineProperty(navigator, 'userAgent', {
 				value: userAgentRandomized,
-				configurable: true // Allows for later modifications if necessary
+				configurable: true 
 			});
 			Object.defineProperty(navigator, 'plugins', {
 				value: pluginsRandomized,
