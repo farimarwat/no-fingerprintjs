@@ -32,9 +32,10 @@
 	const KEY_UNMASKED_VENDOR_WEBGL = "unmaskedVendorWebgl";
 	const KEY_UNMASKED_RENDERER_WEBGL = "unmaskedRendererWebgl";
 	const KEY_SPEECSYNTHESIS_VOICE = "speechVoice";
+	const KEY_WINDOW_DIMENSION = "windowDimension";
 
 	const RANDOMNESS = 2;
-	const useSessionStorage = true;
+	const useSessionStorage = false;
 
 
 	//Helper functions
@@ -200,12 +201,23 @@
 		return randomCaseChangeInFirstSegment(Intl.DateTimeFormat().resolvedOptions().timeZone, KEY_TIMEZONE);
 	}
 
+	function getWindowDimensionRandomized(){
+		let width = window.innerWidth;
+		let height = window.innerHeight;
+		let noise = getOrCreateIntSessionValue(KEY_WINDOW_DIMENSION,()=>Math.floor(Math.random()*RANDOMNESS)+1);
+		return {
+			width: noise + width,
+			height: noise + height
+		}
+	}
+
 	//Global Vars
 	const pluginsRandomized = getPluginsWithFake();
 	const userAgentRandomized = getUserAgentRandomized();
 	const hardwareConcurrencyRandomized = getHardwareConcurrencyRandomized();
 	const screenRandomized = getScreenSize();
 	const timezoneRandomized = getRandomizedTimeZone();
+	let windowDimension = getWindowDimensionRandomized();
 
 
 	//Canvas
@@ -447,7 +459,6 @@
 
 
 	//Speach Synthesis
-
 	(()=>{
 		let originalGetVoices = speechSynthesis.getVoices;
 		speechSynthesis.getVoices = function(){
@@ -458,6 +469,20 @@
 			voices.push(fakeVoice);
 			return voices;
 		}
+	})();
+
+	//Window dimensions
+	(()=>{
+		Object.defineProperty(window,"innerWidth",{
+			get(){
+				return windowDimension.width;
+			}
+		});
+		Object.defineProperty(window,"innerHeight",{
+			get(){
+				return windowDimension.height;
+			}
+		});
 	})();
 	//uncomment for extension
 // }) + ")()";
