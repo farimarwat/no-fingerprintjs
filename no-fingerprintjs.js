@@ -31,9 +31,10 @@
 	const KEY_TIMEZONE_OFFSET = "timezoneoffset";
 	const KEY_UNMASKED_VENDOR_WEBGL = "unmaskedVendorWebgl";
 	const KEY_UNMASKED_RENDERER_WEBGL = "unmaskedRendererWebgl";
+	const KEY_SPEECSYNTHESIS_VOICE = "speechVoice";
 
 	const RANDOMNESS = 2;
-	const useSessionStorage = false;
+	const useSessionStorage = true;
 
 
 	//Helper functions
@@ -216,7 +217,6 @@
 			this.height = addNoise(this.height, KEY_CANVAS_HEIGHT);
 			let context =  originalGetContext.call(this, type, contextAttributes);
 
-			// Check if the context is WebGL (or experimental WebGL) to apply the spoofing.
 			if (context && (type === 'webgl' || type === 'experimental-webgl' || type === 'webgl2')) {
 				const originalGetParameter = context.getParameter.bind(context);
 				context.getParameter = function(parameter) {
@@ -446,6 +446,19 @@
 	})();
 
 
+	//Speach Synthesis
+
+	(()=>{
+		let originalGetVoices = speechSynthesis.getVoices;
+		speechSynthesis.getVoices = function(){
+			let voices = originalGetVoices.call(this);
+			let index = getOrCreateIntSessionValue(KEY_SPEECSYNTHESIS_VOICE,()=>Math.floor(Math.random()*voices.length));
+			
+			let fakeVoice = voices[index];
+			voices.push(fakeVoice);
+			return voices;
+		}
+	})();
 	//uncomment for extension
 // }) + ")()";
 // document.documentElement.prepend(script);
