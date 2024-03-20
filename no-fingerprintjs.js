@@ -2,8 +2,8 @@
 //@script-version: 1.0
 
 //uncomment for extension
-// let script = document.createElement("script");
-// script.textContent = "(" + (function () {
+let script = document.createElement("script");
+script.textContent = "(" + (function () {
 
 	"use strict";
 	const KEY_CANVAS_HEIGHT = "canvasHeight";
@@ -11,7 +11,7 @@
 	const KEY_CANVAS_TEXT_X = "canvasTextX";
 	const KEY_CANVAS_TEXT_Y = "canvasTextY";
 	const KEY_CANVAS_FONT_SIZE = "canvasFontSize";
-	
+
 	const KEY_WEBGL_VERSION = "webglVersion";
 	const KEY_WEBGL_SLV = "webglShadedLanguageVersion";
 	const KEY_WEBGL_RENDERER = "webglRenderer";
@@ -32,7 +32,8 @@
 	const KEY_UNMASKED_VENDOR_WEBGL = "unmaskedVendorWebgl";
 	const KEY_UNMASKED_RENDERER_WEBGL = "unmaskedRendererWebgl";
 	const KEY_SPEECSYNTHESIS_VOICE = "speechVoice";
-	const KEY_WINDOW_DIMENSION = "windowDimension";
+	const KEY_WINDOW_DIMENSION_WIDTH = "windowDimensionWidth";
+	const KEY_WINDOW_DIMENSION_HEIGHT = "windowDimensionHeight";
 
 	const RANDOMNESS = 2;
 	const useSessionStorage = false;
@@ -201,15 +202,7 @@
 		return randomCaseChangeInFirstSegment(Intl.DateTimeFormat().resolvedOptions().timeZone, KEY_TIMEZONE);
 	}
 
-	function getWindowDimensionRandomized(){
-		let width = window.innerWidth;
-		let height = window.innerHeight;
-		let noise = getOrCreateIntSessionValue(KEY_WINDOW_DIMENSION,()=>Math.floor(Math.random()*RANDOMNESS)+1);
-		return {
-			width: noise + width,
-			height: noise + height
-		}
-	}
+
 
 	//Global Vars
 	const pluginsRandomized = getPluginsWithFake();
@@ -217,7 +210,7 @@
 	const hardwareConcurrencyRandomized = getHardwareConcurrencyRandomized();
 	const screenRandomized = getScreenSize();
 	const timezoneRandomized = getRandomizedTimeZone();
-	let windowDimension = getWindowDimensionRandomized();
+
 
 
 	//Canvas
@@ -227,23 +220,23 @@
 		HTMLCanvasElement.prototype.getContext = function (type, contextAttributes) {
 			this.width = addNoise(this.width, KEY_CANVAS_WIDTH);
 			this.height = addNoise(this.height, KEY_CANVAS_HEIGHT);
-			let context =  originalGetContext.call(this, type, contextAttributes);
+			let context = originalGetContext.call(this, type, contextAttributes);
 
 			if (context && (type === 'webgl' || type === 'experimental-webgl' || type === 'webgl2')) {
 				const originalGetParameter = context.getParameter.bind(context);
-				context.getParameter = function(parameter) {
+				context.getParameter = function (parameter) {
 					const debugInfo = this.getExtension('WEBGL_debug_renderer_info');
 					if (debugInfo && parameter === debugInfo.UNMASKED_VENDOR_WEBGL) {
-						let noisedVendor = randomCaseChangeInFirstSegment(originalGetParameter(debugInfo.UNMASKED_VENDOR_WEBGL),KEY_UNMASKED_VENDOR_WEBGL);
+						let noisedVendor = randomCaseChangeInFirstSegment(originalGetParameter(debugInfo.UNMASKED_VENDOR_WEBGL), KEY_UNMASKED_VENDOR_WEBGL);
 						return noisedVendor;
 					} else if (debugInfo && parameter === debugInfo.UNMASKED_RENDERER_WEBGL) {
-						let noisedRenderer = randomCaseChangeInFirstSegment(originalGetParameter(debugInfo.UNMASKED_RENDERER_WEBGL),KEY_UNMASKED_RENDERER_WEBGL);
+						let noisedRenderer = randomCaseChangeInFirstSegment(originalGetParameter(debugInfo.UNMASKED_RENDERER_WEBGL), KEY_UNMASKED_RENDERER_WEBGL);
 						return noisedRenderer;
-					} 
+					}
 					return originalGetParameter(parameter);
 				};
 			}
-	
+
 			return context;
 		};
 
@@ -459,31 +452,45 @@
 
 
 	//Speach Synthesis
-	(()=>{
-		let originalGetVoices = speechSynthesis.getVoices;
-		speechSynthesis.getVoices = function(){
-			let voices = originalGetVoices.call(this);
-			let index = getOrCreateIntSessionValue(KEY_SPEECSYNTHESIS_VOICE,()=>Math.floor(Math.random()*voices.length));
-			
-			let fakeVoice = voices[index];
-			voices.push(fakeVoice);
-			return voices;
+	(() => {
+		try {
+			let originalGetVoices = speechSynthesis.getVoices;
+			speechSynthesis.getVoices = function () {
+				let voices = originalGetVoices.call(this);
+				let index = getOrCreateIntSessionValue(KEY_SPEECSYNTHESIS_VOICE, () => Math.floor(Math.random() * voices.length));
+
+				let fakeVoice = voices[index];
+				voices.push(fakeVoice);
+				return voices;
+			}
+		} catch (ex) {
+			console.log(ex);
 		}
 	})();
 
 	//Window dimensions
-	(()=>{
-		Object.defineProperty(window,"innerWidth",{
-			get(){
-				return windowDimension.width;
-			}
-		});
-		Object.defineProperty(window,"innerHeight",{
-			get(){
-				return windowDimension.height;
-			}
-		});
+
+	(() => {
+		try{
+			let originalW = window.innerWidth;
+			let originalH = window.innerHeight;
+			Object.defineProperty(window, "innerWidth", {
+				get: function () {
+					let noisedW = getOrCreateIntSessionValue(KEY_WINDOW_DIMENSION_WIDTH, () => Math.floor(Math.random() * RANDOMNESS) + 1 + originalW);
+					return noisedW;
+				}
+			});
+			Object.defineProperty(window, "innerHeight", {
+				get: function () {
+					let noisedH = getOrCreateIntSessionValue(KEY_WINDOW_DIMENSION_HEIGHT, () => Math.floor(Math.random() * RANDOMNESS) + 1 + originalH);
+					return noisedH;
+				}
+			});
+		}catch(ex){
+			console.log(ex);
+		}
+		
 	})();
 	//uncomment for extension
-// }) + ")()";
-// document.documentElement.prepend(script);
+}) + ")()";
+document.documentElement.prepend(script);
