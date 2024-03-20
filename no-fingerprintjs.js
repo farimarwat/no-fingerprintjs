@@ -2,8 +2,8 @@
 //@script-version: 1.0
 
 //uncomment for extension
-let script = document.createElement("script");
-script.textContent = "(" + (function () {
+// let script = document.createElement("script");
+// script.textContent = "(" + (function () {
 
 	"use strict";
 	const KEY_CANVAS_HEIGHT = "canvasHeight";
@@ -472,17 +472,17 @@ script.textContent = "(" + (function () {
 
 	(() => {
 		try{
-			let originalW = window.innerWidth;
-			let originalH = window.innerHeight;
+			var originalW = window.innerWidth;
+			var originalH = window.innerHeight;
 			Object.defineProperty(window, "innerWidth", {
 				get: function () {
-					let noisedW = getOrCreateIntSessionValue(KEY_WINDOW_DIMENSION_WIDTH, () => Math.floor(Math.random() * RANDOMNESS) + 1 + originalW);
+					let noisedW = originalW + getOrCreateIntSessionValue(KEY_WINDOW_DIMENSION_WIDTH, () => Math.floor(Math.random() * RANDOMNESS) + 1);
 					return noisedW;
 				}
 			});
 			Object.defineProperty(window, "innerHeight", {
 				get: function () {
-					let noisedH = getOrCreateIntSessionValue(KEY_WINDOW_DIMENSION_HEIGHT, () => Math.floor(Math.random() * RANDOMNESS) + 1 + originalH);
+					let noisedH = originalH + getOrCreateIntSessionValue(KEY_WINDOW_DIMENSION_HEIGHT, () => Math.floor(Math.random() * RANDOMNESS) + 1);
 					return noisedH;
 				}
 			});
@@ -492,5 +492,5 @@ script.textContent = "(" + (function () {
 		
 	})();
 	//uncomment for extension
-}) + ")()";
-document.documentElement.prepend(script);
+// }) + ")()";
+// document.documentElement.prepend(script);
