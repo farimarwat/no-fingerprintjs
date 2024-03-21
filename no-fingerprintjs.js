@@ -11,10 +11,8 @@
 	const KEY_CANVAS_TEXT_X = "canvasTextX";
 	const KEY_CANVAS_TEXT_Y = "canvasTextY";
 	const KEY_CANVAS_FONT_SIZE = "canvasFontSize";
-
 	const KEY_WEBGL_VERSION = "webglVersion";
 	const KEY_WEBGL_SLV = "webglShadedLanguageVersion";
-	const KEY_WEBGL_RENDERER = "webglRenderer";
 	const KEY_WEBGL_VENDOR = "webglVendor";
 
 
@@ -34,9 +32,10 @@
 	const KEY_SPEECSYNTHESIS_VOICE = "speechVoice";
 	const KEY_WINDOW_DIMENSION_WIDTH = "windowDimensionWidth";
 	const KEY_WINDOW_DIMENSION_HEIGHT = "windowDimensionHeight";
+	const KEY_DARK_MODE_ENABLED = "darkModeEnabled";
 
 	const RANDOMNESS = 2;
-	const useSessionStorage = false;
+	const useSessionStorage = true;
 
 
 	//Helper functions
@@ -86,6 +85,21 @@
 		}
 		return value;
 	}
+	function getOrCreateBoolSessionValue(key, generator) {
+		if (!useSessionStorage) {
+			return generator();
+		}
+		const sessionKey = key;
+		let value = sessionStorage.getItem(sessionKey);
+		if (value === null) {
+			value = generator();
+			sessionStorage.setItem(sessionKey, value ? "true" : "false");
+		} else {
+			value = value === "true";
+		}
+		return value;
+	}
+	
 	function generateFakePlugins() {
 		const pluginsArray = [];
 		pluginsArray.refresh = function () { };
@@ -202,17 +216,12 @@
 		return randomCaseChangeInFirstSegment(Intl.DateTimeFormat().resolvedOptions().timeZone, KEY_TIMEZONE);
 	}
 
-
-
 	//Global Vars
 	const pluginsRandomized = getPluginsWithFake();
 	const userAgentRandomized = getUserAgentRandomized();
 	const hardwareConcurrencyRandomized = getHardwareConcurrencyRandomized();
 	const screenRandomized = getScreenSize();
 	const timezoneRandomized = getRandomizedTimeZone();
-
-
-
 	//Canvas
 	(() => {
 		// Spoofing canvas size
@@ -469,9 +478,8 @@
 	})();
 
 	//Window dimensions
-
 	(() => {
-		try{
+		try {
 			var originalW = window.innerWidth;
 			var originalH = window.innerHeight;
 			Object.defineProperty(window, "innerWidth", {
@@ -486,11 +494,44 @@
 					return noisedH;
 				}
 			});
-		}catch(ex){
+		} catch (ex) {
 			console.log(ex);
 		}
-		
+
 	})();
+
+	//Dark Mode
+	(() => {
+		try {
+			const originalMatchMedia = window.matchMedia;
+			let enabled = getOrCreateBoolSessionValue(KEY_DARK_MODE_ENABLED,()=>{
+				return (Math.random() < 0.5)? true : false
+			})
+			console.log("DarkMode: "+enabled);
+			Object.defineProperty(window, 'matchMedia', {
+				writable: true,
+				value: function (query) {
+					if (query === '(prefers-color-scheme: dark)') {
+						// Simulate dark mode being enabled
+						return {
+							matches: enabled, // Simulate match for dark mode
+							media: query,
+							onchange: null,
+							addEventListener: function () { },
+							removeEventListener: function () { },
+							dispatchEvent: function () { },
+						};
+					} else {
+						// For all other queries, use the browser's default behavior
+						return originalMatchMedia.call(window, query);
+					}
+				},
+			});
+		} catch (ex) {
+			console.log(ex);
+		}
+	})();
+
 	//uncomment for extension
 // }) + ")()";
 // document.documentElement.prepend(script);
