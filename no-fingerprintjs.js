@@ -2,8 +2,8 @@
 //@script-version: 1.0
 
 //uncomment for extension
-// let script = document.createElement("script");
-// script.textContent = "(" + (function () {
+let script = document.createElement("script");
+script.textContent = "(" + (function () {
 
 "use strict";
 const KEY_CANVAS_HEIGHT = "canvasHeight";
@@ -33,9 +33,11 @@ const KEY_SPEECSYNTHESIS_VOICE = "speechVoice";
 const KEY_WINDOW_DIMENSION_WIDTH = "windowDimensionWidth";
 const KEY_WINDOW_DIMENSION_HEIGHT = "windowDimensionHeight";
 const KEY_DARK_MODE_ENABLED = "darkModeEnabled";
+const KEY_LANGUAGE = "language";
+const KEY_LANGUAGES = "languages";
 
 const RANDOMNESS = 2;
-const useSessionStorage = true;
+const useSessionStorage = false;
 
 
 //Helper functions
@@ -117,7 +119,6 @@ function generateFakePlugins() {
 }
 function randomCaseChangeInFirstSegment(str, key) {
 	let firstSegment = str.split(' ')[0];
-	console.log("nofingerprint: " + firstSegment);
 	if (/[a-zA-Z]/.test(firstSegment)) {
 		const charPositions = [];
 		for (let i = 0; i < firstSegment.length; i++) {
@@ -216,12 +217,29 @@ function getRandomizedTimeZone() {
 	return randomCaseChangeInFirstSegment(Intl.DateTimeFormat().resolvedOptions().timeZone, KEY_TIMEZONE);
 }
 
+function getLanguageRandomized(){
+	return randomCaseChangeInFirstSegment(navigator.language,KEY_LANGUAGE);
+}
+
+function getLanguagesRandomized() {
+    let languages = navigator.languages;
+    let randomIndex = Math.floor(Math.random() * languages.length);
+    let randomlySelected = languages[randomIndex];
+    let modified = randomCaseChangeInFirstSegment(randomlySelected, KEY_LANGUAGES);
+    let modifiedLanguages = [...languages, modified];
+    
+    return modifiedLanguages;
+}
+
+
 //Global Vars
 const pluginsRandomized = getPluginsWithFake();
 const userAgentRandomized = getUserAgentRandomized();
 const hardwareConcurrencyRandomized = getHardwareConcurrencyRandomized();
 const screenRandomized = getScreenSize();
 const timezoneRandomized = getRandomizedTimeZone();
+const languageRandomized = getLanguageRandomized();
+const languagesRandomized = getLanguagesRandomized();
 
 
 //Canvas
@@ -403,6 +421,14 @@ const timezoneRandomized = getRandomizedTimeZone();
 			value: hardwareConcurrencyRandomized,
 			configurable: true
 		});
+		Object.defineProperty(navigator, 'language', {
+			value: languageRandomized,
+			configurable: true
+		});
+		Object.defineProperty(navigator, 'languages', {
+			value: languagesRandomized,
+			configurable: true
+		});
 	} catch (e) {
 		console.log("NoFingerPrint Exception(Navigator): " + ex);
 	}
@@ -561,5 +587,5 @@ const timezoneRandomized = getRandomizedTimeZone();
 })();
 
 //uncomment for extension
-// }) + ")()";
-// document.documentElement.prepend(script);
+}) + ")()";
+document.documentElement.prepend(script);
