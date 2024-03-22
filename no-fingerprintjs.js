@@ -2,8 +2,8 @@
 //@script-version: 1.0
 
 //uncomment for extension
-let script = document.createElement("script");
-script.textContent = "(" + (function () {
+// let script = document.createElement("script");
+// script.textContent = "(" + (function () {
 
 "use strict";
 const KEY_CANVAS_HEIGHT = "canvasHeight";
@@ -37,7 +37,7 @@ const KEY_LANGUAGE = "language";
 const KEY_LANGUAGES = "languages";
 
 const RANDOMNESS = 2;
-const useSessionStorage = false;
+const useSessionStorage = true;
 
 
 //Helper functions
@@ -587,5 +587,5 @@ const languagesRandomized = getLanguagesRandomized();
 })();
 
 //uncomment for extension
-}) + ")()";
-document.documentElement.prepend(script);
+// }) + ")()";
+// document.documentElement.prepend(script);
