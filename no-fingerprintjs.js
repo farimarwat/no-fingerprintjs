@@ -274,7 +274,7 @@ const timezoneRandomized = getRandomizedTimeZone();
 			}
 		};
 	} catch (ex) {
-		console.log("NoFingerPrint(Canvas): " + ex);
+		console.log("NoFingerPrint Exception(Canvas): " + ex);
 	}
 })();
 
@@ -326,7 +326,7 @@ const timezoneRandomized = getRandomizedTimeZone();
 			};
 		}
 	} catch (ex) {
-		console.log("NoFingerPrint(WebGl): " + ex);
+		console.log("NoFingerPrint Exception(WebGl): " + ex);
 	}
 })();
 
@@ -348,7 +348,7 @@ const timezoneRandomized = getRandomizedTimeZone();
 			}
 		});
 	} catch (ex) {
-		console.log("NoFingerPrint(Font): " + ex);
+		console.log("NoFingerPrint Exception(Font): " + ex);
 	}
 })();
 
@@ -384,7 +384,7 @@ const timezoneRandomized = getRandomizedTimeZone();
 			return data;
 		};
 	} catch (ex) {
-		console.log("NoFingerPrint(Audio): " + ex);
+		console.log("NoFingerPrint Exception(Audio): " + ex);
 	}
 })();
 
@@ -404,7 +404,7 @@ const timezoneRandomized = getRandomizedTimeZone();
 			configurable: true
 		});
 	} catch (e) {
-		console.log("NoFingerPrint(Navigator): " + ex);
+		console.log("NoFingerPrint Exception(Navigator): " + ex);
 	}
 })();
 
@@ -417,7 +417,7 @@ const timezoneRandomized = getRandomizedTimeZone();
 		screen.width && setValue(screen, "width", screenSize[0]);
 		screen.height && setValue(screen, "height", screenSize[1]);
 	} catch (ex) {
-		console.log("NoFingerPrint(Screen): " + ex);
+		console.log("NoFingerPrint Exception(Screen): " + ex);
 	}
 })();
 
@@ -438,7 +438,7 @@ const timezoneRandomized = getRandomizedTimeZone();
 			return instance;
 		};
 	} catch (ex) {
-		console.log("NoFingerPrint(TimeZone): " + ex);
+		console.log("NoFingerPrint Exception(TimeZone): " + ex);
 	}
 })();
 
@@ -453,38 +453,38 @@ const timezoneRandomized = getRandomizedTimeZone();
 			return noised;
 		};
 	} catch (ex) {
-		console.log("NoFingerPrint(TimeZone Offset): " + ex);
+		console.log("NoFingerPrint Exception(TimeZone Offset): " + ex);
 	}
 
 })();
 
 //Media Devices
 (() => {
-	try{
+	try {
 		const originalEnumerateDevices = navigator.mediaDevices.enumerateDevices.bind(navigator.mediaDevices);
-	navigator.mediaDevices.enumerateDevices = async () => {
-		const devices = await originalEnumerateDevices();
-		const spoofedDevices = devices.map(device => {
-			const label = getOrCreateStringSessionValue(device.kind, () => {
-				const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-				let result = '';
-				for (let i = 0; i < 4; i++) {
-					result += chars.charAt(Math.floor(Math.random() * chars.length));
-				}
-				return device.kind + " " + result;
+		navigator.mediaDevices.enumerateDevices = async () => {
+			const devices = await originalEnumerateDevices();
+			const spoofedDevices = devices.map(device => {
+				const label = getOrCreateStringSessionValue(device.kind, () => {
+					const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+					let result = '';
+					for (let i = 0; i < 4; i++) {
+						result += chars.charAt(Math.floor(Math.random() * chars.length));
+					}
+					return device.kind + " " + result;
+				});
+				return {
+					deviceId: device.deviceId,
+					kind: device.kind,
+					label: label,
+					groupId: device.groupId
+				};
 			});
-			return {
-				deviceId: device.deviceId,
-				kind: device.kind,
-				label: label,
-				groupId: device.groupId
-			};
-		});
 
-		return spoofedDevices;
-	};
-	}catch(ex){
-		console.log("NoFingerPrint(Media Devices): " + ex);
+			return spoofedDevices;
+		};
+	} catch (ex) {
+		console.log("NoFingerPrint Exception(Media Devices): " + ex);
 	}
 })();
 
@@ -501,7 +501,7 @@ const timezoneRandomized = getRandomizedTimeZone();
 			return voices;
 		}
 	} catch (ex) {
-		console.log("NoFingerPrint(Speach Synthesis): " + ex);
+		console.log("NoFingerPrint Exception(Speach Synthesis): " + ex);
 	}
 })();
 
@@ -523,7 +523,7 @@ const timezoneRandomized = getRandomizedTimeZone();
 			}
 		});
 	} catch (ex) {
-		console.log("NoFingerPrint(Window Dimensions): " + ex);
+		console.log("NoFingerPrint Exception(Window Dimensions): " + ex);
 	}
 
 })();
@@ -556,7 +556,7 @@ const timezoneRandomized = getRandomizedTimeZone();
 			},
 		});
 	} catch (ex) {
-		console.log("NoFingerPrint(Dark Mode): " + ex);
+		console.log("NoFingerPrint Exception(Dark Mode): " + ex);
 	}
 })();
 
