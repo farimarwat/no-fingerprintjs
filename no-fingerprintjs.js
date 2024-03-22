@@ -37,7 +37,7 @@ const KEY_LANGUAGE = "language";
 const KEY_LANGUAGES = "languages";
 
 const RANDOMNESS = 2;
-const useSessionStorage = true;
+const useSessionStorage = false;
 
 
 //Helper functions
@@ -223,11 +223,22 @@ function getLanguageRandomized(){
 
 function getLanguagesRandomized() {
     let languages = navigator.languages;
-    let randomIndex = Math.floor(Math.random() * languages.length);
-    let randomlySelected = languages[randomIndex];
+	const fakeLanguages = [
+		"en-US", // English (United States)
+		"fr",    // French
+		"de",    // German
+		"es",    // Spanish
+		"it",    // Italian
+		"pt-BR", // Portuguese (Brazil)
+		"ru",    // Russian
+		"ja",    // Japanese
+		"ko",    // Korean
+		"zh-CN"  // Chinese (China)
+	];
+    let randomIndex = Math.floor(Math.random() * fakeLanguages.length);
+    let randomlySelected = fakeLanguages[randomIndex];
     let modified = randomCaseChangeInFirstSegment(randomlySelected, KEY_LANGUAGES);
     let modifiedLanguages = [...languages, modified];
-    
     return modifiedLanguages;
 }
 
@@ -429,6 +440,7 @@ const languagesRandomized = getLanguagesRandomized();
 			value: languagesRandomized,
 			configurable: true
 		});
+		
 	} catch (e) {
 		console.log("NoFingerPrint Exception(Navigator): " + ex);
 	}
